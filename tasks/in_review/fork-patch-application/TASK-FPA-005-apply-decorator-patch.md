@@ -1,9 +1,16 @@
 ---
 id: TASK-FPA-005
 title: Apply patch 004 (handle_multiple_group_ids decorator >=1) as commit 3
-status: backlog
+status: in_review
 created: 2026-05-04T00:00:00Z
-updated: 2026-05-04T00:00:00Z
+updated: 2026-05-04T12:10:00+01:00
+previous_state: backlog
+patch_commit: 7a914ec
+test_results:
+  status: passed
+  baseline_diff: no_new_failures
+  falkordb_summary: "5 failed, 24 passed, 1 skipped, 42 errors (identical to baseline)"
+  last_run: 2026-05-04T12:10:00+01:00
 priority: high
 task_type: feature
 complexity: 2
@@ -16,10 +23,6 @@ wave: 2
 implementation_mode: direct
 dependencies: [TASK-FPA-004]
 workspace_name: fork-patch-application-wave2-3
-test_results:
-  status: pending
-  coverage: null
-  last_run: null
 ---
 
 # Apply patch 004 (handle_multiple_group_ids decorator)

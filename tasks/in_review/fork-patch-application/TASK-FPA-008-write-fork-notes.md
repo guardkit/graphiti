@@ -1,9 +1,10 @@
 ---
 id: TASK-FPA-008
 title: Write FORK-NOTES.md at fork repo root documenting patches and rationale
-status: backlog
+status: in_review
 created: 2026-05-04T00:00:00Z
-updated: 2026-05-04T00:00:00Z
+updated: 2026-05-04T15:30:00+01:00
+previous_state: in_progress
 priority: medium
 task_type: docs
 complexity: 2
@@ -16,10 +17,12 @@ wave: 4
 implementation_mode: direct
 dependencies: [TASK-FPA-007]
 workspace_name: fork-patch-application-wave4-1
+patch_commit: e0f92a3
 test_results:
-  status: pending
+  status: not_applicable
   coverage: null
-  last_run: null
+  last_run: 2026-05-04T15:30:00+01:00
+  notes: docs-only task — no automated tests; AC compliance verified by content review
 ---
 
 # Write FORK-NOTES.md

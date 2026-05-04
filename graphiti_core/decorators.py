@@ -44,13 +44,17 @@ def handle_multiple_group_ids(func: F) -> F:
         if group_ids is None and group_ids_pos is not None and len(args) > group_ids_pos:
             group_ids = args[group_ids_pos]
 
-        # Only handle FalkorDB with multiple group_ids
+        # guardkit fork (TASK-FORK-PATCH bug #8): take the FalkorDB
+        # per-group driver-clone path for single-group calls too, not only
+        # multi-group calls. Upstream's `len > 1` skipped single-group
+        # calls, leaving them on the shared driver and the wrong named
+        # graph — empty results for any single-group search/retrieval.
+        # Mirrors upstream PR #1170 / issue #1161.
         if (
             hasattr(self, 'clients')
             and hasattr(self.clients, 'driver')
             and self.clients.driver.provider == GraphProvider.FALKORDB
             and group_ids
-            and len(group_ids) > 1
         ):
             # Execute for each group_id concurrently
             driver = self.clients.driver

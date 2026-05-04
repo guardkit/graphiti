@@ -1,9 +1,11 @@
 ---
 id: TASK-FORK-PATCH
 title: Apply guardkit bug-fix patches to graphiti fork (RediSearch dash-escape + openai_generic factory)
-status: review_complete
+status: completed
 created: 2026-05-03T00:00:00Z
-updated: 2026-05-04T00:00:00Z
+updated: 2026-05-04T13:00:00Z
+completed_at: 2026-05-04T13:00:00Z
+final_tag: v0.29.5-guardkit.2
 priority: high
 task_type: feature
 complexity: 4

@@ -1,9 +1,12 @@
 ---
 id: TASK-FPA-006
 title: Apply patch 005 (edge search startNode/endNode) as commit 4
-status: in_review
+status: completed
 created: 2026-05-04T00:00:00Z
-updated: 2026-05-04T13:05:00+01:00
+updated: 2026-05-04T13:15:00+01:00
+completed: 2026-05-04T13:15:00+01:00
+previous_state: in_review
+completed_location: tasks/completed/fork-patch-application/
 priority: high
 task_type: feature
 complexity: 3

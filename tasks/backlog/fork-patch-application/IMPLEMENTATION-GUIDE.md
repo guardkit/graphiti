@@ -5,7 +5,7 @@
 **Review report**: [.claude/reviews/TASK-FORK-PATCH-review-report.md](../../../.claude/reviews/TASK-FORK-PATCH-review-report.md)
 **Review addendum**: [.claude/reviews/TASK-FORK-PATCH-review-addendum-execution-flow.md](../../../.claude/reviews/TASK-FORK-PATCH-review-addendum-execution-flow.md)
 **Execution location**: `promaxgb10-41b1` (single-machine session)
-**Total estimated effort**: ~290 minutes (≈5 hours focused)
+**Total estimated effort**: ~230 minutes (≈4 hours focused)
 
 ## Overview
 
@@ -16,14 +16,14 @@ This implementation lands six commits on a fork of `getzep/graphiti` at version 
 ```
 Wave 1 — Repo setup (parallel-safe; both must complete before Wave 2)
 ├── TASK-FPA-001 — Capture pre-application baselines (15 min, direct)
-└── TASK-FPA-002 — Push fork to GitHub (30 min, manual)
+└── TASK-FPA-002 — Rename branch and push to origin (10 min, direct)
 
 Wave 2 — Patch application (STRICTLY SEQUENTIAL — each commit's baseline diff
                             must pass before the next commit lands)
 ├── TASK-FPA-003 — Apply patches 001+002+003 (commit 1, 30 min, direct)
-├── TASK-FPA-004 — Apply factories.py auto-detect (commit 2, 60 min, task-work)
-├── TASK-FPA-005 — Apply patch 004 (commit 3, 20 min, direct)
-└── TASK-FPA-006 — Apply patch 005 (commit 4, 30 min, direct)
+├── TASK-FPA-004 — Apply patch 006 factories.py auto-detect (commit 2, 20 min, direct)
+├── TASK-FPA-005 — Apply patch 004 decorator (commit 3, 20 min, direct)
+└── TASK-FPA-006 — Apply patch 005 edge search (commit 4, 30 min, direct)
 
 Wave 3 — Tag and publish
 └── TASK-FPA-007 — Tag v0.29.5-guardkit.1 + push (15 min, manual)
@@ -34,7 +34,7 @@ Wave 4 — Documentation and verification (sequential, can be parallelised
 └── TASK-FPA-009 — End-to-end verification (60 min, direct)
 ```
 
-**Total**: 290 minutes ≈ 5 hours focused work.
+**Total**: 230 minutes ≈ 4 hours focused work.
 
 ## Why mostly sequential, not parallel
 

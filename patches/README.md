@@ -1,6 +1,6 @@
 # guardkit fork — pre-built patches
 
-This directory holds ready-to-apply patches drafted ahead of the GB10 fork-application session for [TASK-FORK-PATCH](../tasks/backlog/TASK-FORK-PATCH-apply-appmilla-bug-fix-patches.md). Each patch is a unified diff (`diff -u`) that applies cleanly via `git apply -p1` (or `patch -p1`) against this fork at version 0.29.0 (verified 2026-05-04 — all five pass `git apply --check` individually and together against `d0913fe`).
+This directory holds ready-to-apply patches drafted ahead of the GB10 fork-application session for [TASK-FORK-PATCH](../tasks/backlog/TASK-FORK-PATCH-apply-appmilla-bug-fix-patches.md). Each patch is a unified diff (`diff -u`) that applies cleanly via `git apply -p1` (or `patch -p1`) against this fork at version 0.29.0 (verified 2026-05-04 — all six pass `git apply --check` individually and together against `d0913fe`).
 
 ## What's here, in suggested apply order
 
@@ -11,10 +11,11 @@ This directory holds ready-to-apply patches drafted ahead of the GB10 fork-appli
 | 3 | `003-mcp-early-host-binding.patch` | #13 (graphiti-mcp's `transport_security` frozen with localhost-only allow-list because host is mutated AFTER FastMCP construction) | `mcp_server/src/graphiti_mcp_server.py` |
 | 4 | `004-handle-multiple-group-ids-decorator.patch` *(new 2026-05-04)* | #8 (`handle_multiple_group_ids` decorator skips driver-clone for single-group calls because of `len > 1` check) — derived from upstream PR [#1170](https://github.com/getzep/graphiti/pull/1170) / issue [#1161](https://github.com/getzep/graphiti/issues/1161) | `graphiti_core/decorators.py` (`handle_multiple_group_ids` wrapper) |
 | 5 | `005-edge-search-direct-endpoints.patch` *(new 2026-05-04)* | #9 (`edge_fulltext_search` and `edge_bfs_search` use O(n×m) re-MATCH on `rel.uuid` to re-find endpoints) — derived from upstream issue [#1272](https://github.com/getzep/graphiti/issues/1272) and `guardkit/knowledge/falkordb_workaround.py:380-635` | `graphiti_core/search/search_utils.py` (default `match_query` for `edge_fulltext_search`; default-else branch for `edge_bfs_search`) |
+| 6 | `006-factories-auto-detect.patch` *(new 2026-05-04)* | #6 (`factories.py` ignores `api_url`) + #7 (`OpenAIClient` uses Responses API) — captured from the original Macbook in-flight diff via `rsync` over Tailscale | `mcp_server/src/services/factories.py` (`LLMClientFactory.create` `case 'openai':`); `mcp_server/config/config-local-neo4j.yaml` (clean generic example template per AC-FORK-16) |
 
-These five patches still do **not** cover the `openai_generic` / `responses.parse` factory routing (bugs #6/#7) — that's the in-flight diff already drafted at `~/Projects/appmilla_github/graphiti-original/mcp_server/src/services/factories.py` per the task's "In-flight patch already drafted" section. Apply that as a separate sixth commit during the GB10 session (rebase onto current `d0913fe` first).
+All six patches drafted; the only thing not in the patch set is bug #4 (already fixed upstream in 0.29.0 per the audit).
 
-Decision 5 in the task file (drop-filter vs escape-and-keep) is **locked to drop-filter** as of 2026-05-04 — patch 1 implements it. Decision 6 (auto-detect vs explicit `openai_generic`) is **locked to auto-detect**; the in-flight diff matches that shape.
+Decision 5 in the task file (drop-filter vs escape-and-keep) is **locked to drop-filter** as of 2026-05-04 — patch 1 implements it. Decision 6 (auto-detect vs explicit `openai_generic`) is **locked to auto-detect** — patch 6 implements it.
 
 ## Patch interaction notes (added 2026-05-04 per task-review addendum)
 
@@ -45,12 +46,16 @@ git apply patches/004-handle-multiple-group-ids-decorator.patch
 git apply --check patches/005-edge-search-direct-endpoints.patch
 git apply patches/005-edge-search-direct-endpoints.patch
 
+git apply --check patches/006-factories-auto-detect.patch
+git apply patches/006-factories-auto-detect.patch
+
 # Option B — patch -p1 (works even outside a git checkout)
 patch -p1 < patches/001-drop-fulltext-group-filter.patch
 patch -p1 < patches/002-extend-sanitize-strip-backtick.patch
 patch -p1 < patches/003-mcp-early-host-binding.patch
 patch -p1 < patches/004-handle-multiple-group-ids-decorator.patch
 patch -p1 < patches/005-edge-search-direct-endpoints.patch
+patch -p1 < patches/006-factories-auto-detect.patch
 ```
 
 After all are applied, commit each as a separate commit so each fix is independently revertable. Suggested commit messages:
@@ -119,10 +124,28 @@ Refs: upstream issue #1272;
 guardkit/knowledge/falkordb_workaround.py:380-635 (consumer-side patch).
 ```
 
+```
+fix(factories): auto-detect non-OpenAI endpoints, route to OpenAIGenericClient
+
+When provider='openai' but api_url points at a non-api.openai.com host
+(e.g. vLLM/llama-swap on localhost:9000), pass the base_url through to
+LLMConfig and route to OpenAIGenericClient (Chat Completions) rather
+than OpenAIClient (Responses API, which vLLM doesn't support). Default
+behaviour for genuine OpenAI endpoints is preserved.
+
+Also adds mcp_server/config/config-local-neo4j.yaml as a clean generic
+Docker-compose-with-Neo4j example template (per AC-FORK-16).
+
+Refs: TASK-FORK-PATCH bugs #6/#7; guardkit TASK-INF-5054;
+graphiti knowledge-graph fact 2026-04-03 'graphiti MCP server factory
+uses OpenAIGenericClient for non-OpenAI endpoints'.
+```
+
 ## What's NOT in this directory (and why)
 
-- **Bug #6/#7 — `openai_generic` factory routing**: addressed by the in-flight diff at `~/Projects/appmilla_github/graphiti-original/mcp_server/src/services/factories.py` (Approach A — auto-detect on `base_url`). Apply that diff verbatim per the task's "In-flight patch already drafted" section.
+- **Bug #4 — `GroupIdValidationError` colon-rejection**: already fixed upstream in 0.29.0 (this fork is at 0.29.0; nothing to do).
 - **Patches for the verification ACs themselves** (smoke tests, container rebuild, doc updates) — those live in the task file's mechanical plan, not as code diffs.
+- **`mcp_server/config/config-guardkit.yaml`** — present in the original Macbook in-flight diff but **deliberately excluded from patch 006**. It's a stale Gemini-era snapshot with dead `:8001` embedder and wrong 1024-dim per parent task lines 259-322.
 
 ## Verifying after apply
 

@@ -90,17 +90,20 @@ That's 7 distinct upstream defects across two graphiti-core minor versions. Patc
 
 The Wave 2 fixes (LLM/embedder wiring in `get_client`, the `_read_student_partition` seam, the `_add_episode_kwargs` helper) **stay in consumer code** — they're not bugs in graphiti-core, they're consumer wiring choices around graphiti-core's API surface. Don't try to push those upstream into this fork.
 
-### Pre-built patches available at [`patches/`](../../patches/) (drafted 2026-05-03)
+### Pre-built patches available at [`patches/`](../../patches/) (drafted 2026-05-03 to 2026-05-04)
 
-Three of the audit-surfaced fixes are already drafted as ready-to-apply unified diffs in [`patches/`](../../patches/) at the fork repo root. Each was verified against the fork's current 0.29.0 main with `git apply --check`:
+All six audit-surfaced fixes are now drafted as ready-to-apply unified diffs in [`patches/`](../../patches/) at the fork repo root. Each was verified against the fork's current head (`d0913fe`) with `git apply --check`, and all six pass together:
 
 | Patch | Bugs covered | Apply step |
 |-------|--------------|------------|
 | [`patches/001-drop-fulltext-group-filter.patch`](../../patches/001-drop-fulltext-group-filter.patch) | #5 + #11 + #12 (the audit's recommended **drop-the-filter** approach for Decision 5) | `git apply patches/001-drop-fulltext-group-filter.patch` after Decision 5 = drop-filter is locked |
 | [`patches/002-extend-sanitize-strip-backtick.patch`](../../patches/002-extend-sanitize-strip-backtick.patch) | #10 (only backtick remains missing from `sanitize()` in 0.29.0; slashes/pipes/backslashes already in upstream's strip list) | `git apply patches/002-extend-sanitize-strip-backtick.patch` |
 | [`patches/003-mcp-early-host-binding.patch`](../../patches/003-mcp-early-host-binding.patch) | #13 (read `MCP_SERVER_HOST` env var at module load, pass to FastMCP construction so transport_security freezes against the right allow-list) | `git apply patches/003-mcp-early-host-binding.patch` — also requires `graphiti-mcp.sh` to export `MCP_SERVER_HOST=0.0.0.0` for the bootstrap shim to be retirable |
+| [`patches/004-handle-multiple-group-ids-decorator.patch`](../../patches/004-handle-multiple-group-ids-decorator.patch) | #8 (mirrors upstream PR #1170 / issue #1161 — drops `len > 1` check so single-group calls also fan out via driver-clone) | `git apply patches/004-handle-multiple-group-ids-decorator.patch` |
+| [`patches/005-edge-search-direct-endpoints.patch`](../../patches/005-edge-search-direct-endpoints.patch) | #9 (mirrors upstream issue #1272 — replaces O(n×m) re-MATCH on `rel.uuid` with O(n) `startNode`/`endNode` access) | `git apply patches/005-edge-search-direct-endpoints.patch` |
+| [`patches/006-factories-auto-detect.patch`](../../patches/006-factories-auto-detect.patch) | #6 + #7 (Approach A — auto-detect non-OpenAI endpoints, route to `OpenAIGenericClient`). Captured 2026-05-04 from the original Macbook in-flight diff via `rsync` over Tailscale. Includes the clean generic `config-local-neo4j.yaml` example template per AC-FORK-16; the stale `config-guardkit.yaml` from the same Mac state was deliberately excluded. | `git apply patches/006-factories-auto-detect.patch` |
 
-Suggested commit messages and full apply instructions are in [`patches/README.md`](../../patches/README.md). The remaining fixes (bugs #6/#7 via the in-flight `openai_generic` diff at `~/Projects/appmilla_github/graphiti-original/`, bug #8 via upstream PR #1170, bug #9 via upstream issue #1272 / `falkordb_workaround.py:380-635`) still need to be derived/cherry-picked during the GB10 session.
+Suggested commit messages and full apply instructions are in [`patches/README.md`](../../patches/README.md). With all six drafted, the GB10 session is purely apply-verify-tag — no patch authoring during the working session.
 
 ## Decisions to lock in before patching starts
 
@@ -140,7 +143,7 @@ Suggested commit messages and full apply instructions are in [`patches/README.md
 1. Push the local `~/Projects/appmilla_github/graphiti/` clone to the github fork (or fresh-fork from upstream + apply patches if cleaner).
 2. On a fix branch (`guardkit-fixes-0.29` or similar), apply the patches in this order (each as its own commit so they are independently revertable; bisect-safe per addendum execution-flow trace):
    - **Commit 1**: `git apply patches/001-drop-fulltext-group-filter.patch patches/002-extend-sanitize-strip-backtick.patch patches/003-mcp-early-host-binding.patch` (the three RediSearch / sanitize / MCP-host fixes — already drafted, all verified clean apply against `d0913fe`).
-   - **Commit 2**: apply the `factories.py` auto-detect diff per Decision 6 (rebase + cherry-pick from `~/Projects/appmilla_github/graphiti-original/`). Per addendum Diagram 13 the diff is +14/-0 lines; no schema migration.
+   - **Commit 2**: `git apply patches/006-factories-auto-detect.patch` (factories.py auto-detect per Decision 6 + clean generic config-local-neo4j.yaml per AC-FORK-16; captured 2026-05-04 from the original Mac in-flight diff via rsync over Tailscale, verified clean apply).
    - **Commit 3**: `git apply patches/004-handle-multiple-group-ids-decorator.patch` (bug #8 — drafted 2026-05-04, derived from upstream PR #1170).
    - **Commit 4**: `git apply patches/005-edge-search-direct-endpoints.patch` (bug #9 — drafted 2026-05-04, derived from `guardkit/knowledge/falkordb_workaround.py:380-635` reshape).
    - After each commit, re-run the step 0 baseline diff. **Stop and bisect immediately** if any new failure appears.

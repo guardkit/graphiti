@@ -1,0 +1,43 @@
+--- a/graphiti_core/search/search_utils.py
++++ b/graphiti_core/search/search_utils.py
+@@ -200,9 +200,15 @@ async def edge_fulltext_search(
+     if fuzzy_query == '':
+         return []
+
++    # appmilla fork (TASK-FORK-PATCH bug #9): replace the O(n×m) re-MATCH
++    # on rel.uuid with O(n) startNode/endNode endpoint access. The
++    # relationship `rel` came from the RELATES_TO fulltext index so it is
++    # RELATES_TO by construction; no type filter needed. Result set is
++    # identical to the original (directed) MATCH. Mirrors the Neptune
++    # branch below and upstream issue #1272.
+     match_query = """
+     YIELD relationship AS rel, score
+-    MATCH (n:Entity)-[e:RELATES_TO {uuid: rel.uuid}]->(m:Entity)
++    WITH rel AS e, score, startNode(rel) AS n, endNode(rel) AS m
+     """
+     if driver.provider == GraphProvider.KUZU:
+         match_query = """
+@@ -545,12 +551,22 @@ async def edge_bfs_search(
+                 """
+             )
+         else:
++            # appmilla fork (TASK-FORK-PATCH bug #9): replace the O(n×m)
++            # re-MATCH on rel.uuid with O(n) startNode/endNode access. The
++            # path traversal allows MENTIONS edges (Episode→Entity), so we
++            # filter to RELATES_TO before binding endpoints. Original used
++            # an undirected MATCH which double-counted each edge with
++            # swapped source/target — a latent bug independent of the
++            # perf one; we return each edge exactly once in directed
++            # (source → target) form, matching graphiti's data model.
+             query = (
+                 f"""
+                 UNWIND $bfs_origin_node_uuids AS origin_uuid
+                 MATCH path = (origin {{uuid: origin_uuid}})-[:RELATES_TO|MENTIONS*1..{bfs_max_depth}]->(:Entity)
+                 UNWIND relationships(path) AS rel
+-                MATCH (n:Entity)-[e:RELATES_TO {{uuid: rel.uuid}}]-(m:Entity)
++                WITH rel
++                WHERE type(rel) = 'RELATES_TO'
++                WITH rel AS e, startNode(rel) AS n, endNode(rel) AS m
+                 """
+                 + filter_query
+                 + """

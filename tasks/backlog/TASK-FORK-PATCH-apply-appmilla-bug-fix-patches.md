@@ -1,9 +1,9 @@
 ---
 id: TASK-FORK-PATCH
 title: Apply appmilla bug-fix patches to graphiti fork (RediSearch dash-escape + openai_generic factory)
-status: backlog
+status: review_complete
 created: 2026-05-03T00:00:00Z
-updated: 2026-05-03T00:00:00Z
+updated: 2026-05-04T00:00:00Z
 priority: high
 task_type: feature
 complexity: 4
@@ -14,6 +14,25 @@ test_results:
   status: pending
   coverage: null
   last_run: null
+review_results:
+  mode: decision
+  depth: comprehensive (revised)
+  score: 82
+  findings_count: 8
+  recommendations_count: 7
+  diagrams_count: 13
+  decision: implement-with-locked-decisions
+  report_path: .claude/reviews/TASK-FORK-PATCH-review-report.md
+  addendum_path: .claude/reviews/TASK-FORK-PATCH-review-addendum-execution-flow.md
+  completed_at: 2026-05-04T00:00:00Z
+  regression_confidence: high (95%+)
+  decisions_recommended:
+    1: 0.29.x (fork already at 0.29.0)
+    2: public (appmilla/graphiti)
+    3: appmilla org (or personal)
+    4: tag-and-pin (v0.29.5-appmilla.1)
+    5: drop-the-filter (patch 001 already drafted)
+    6: auto-detect on base_url (Approach A, already drafted in graphiti-official)
 ---
 
 # Apply appmilla bug-fix patches to graphiti fork (RediSearch dash-escape + openai_generic factory)
@@ -69,26 +88,45 @@ Suggested commit messages and full apply instructions are in [`patches/README.md
 1. **Which version to fork from?** Local clone is at 0.28.2; study-tutor venv pins `>=0.29,<0.30`. The bug surface for #1 is identical in both versions (verified: both `falkordb_driver.py:406-410` files have the same broken double-quote escape).
    - **Recommended: standardise on 0.29.x** — pick a recent tag, fork from there, rebuild the MCP container against it. Single version everywhere. Bigger upfront move (MCP container upgrade) but no two-branch maintenance burden during DDD prep.
    - Alternative: maintain two branches `appmilla-0.28.x` and `appmilla-0.29.x`. More maintenance overhead.
-   - **DECISION**: _TBD — capture chosen version here before starting work_
+   - **DECISION (LOCKED 2026-05-04)**: **0.29.x** — fork is already at 0.29.0 (`d0913fe` on `work/falkordb-fixes`). Cut tag `v0.29.5-appmilla.1` after the fix-commit lands. Rationale: study-tutor pin already `>=0.29,<0.30`, single-version policy is operationally simpler, all five drafted patches verified against this exact tree.
 
 2. **Public or private fork?** Affects:
    - **DDD talk story**: public fork enables credible "we use a fork of graphiti with these fixes" narrative. Private fork means talk says "we use graphiti" with no asterisk.
    - **Pip install mechanics**: public is `pip install git+https://github.com/...` straight up. Private needs auth (GH token in env, deploy keys for docker builds). More moving parts.
    - **Recommended: public**, named clearly (e.g. `appmilla/graphiti` with branch `appmilla-fixes-0.29`).
-   - **DECISION**: _TBD — capture chosen visibility here before starting work_
+   - **DECISION (LOCKED 2026-05-04)**: **public**. Rationale: enables DDD South West talk narrative; `pip install git+https://...` works without auth plumbing; avoids GH-token rotation across two CI surfaces (study-tutor venv install, GB10 docker image build).
 
 3. **Where does the fork live?** Github org `appmilla` (if exists) or personal account. Engineering-equivalent; affects only URL.
-   - **DECISION**: _TBD — capture chosen owner here before starting work_
+   - **DECISION (LOCKED 2026-05-04)**: **`appmilla` org if it exists, else personal account**. Confirm during the GB10 session step 1 (`gh repo view appmilla/graphiti` to check). URL stability favours org; engineering-equivalent if not.
 
 4. **Tag-and-pin or branch-and-pin?** Consumers pin via tag (`@v0.29.5-appmilla.1` — reproducible). Active dev happens on a branch. Standard fork practice: cut a tag when shipping.
-   - **DECISION**: _TBD — capture chosen pinning strategy here before starting work_
+   - **DECISION (LOCKED 2026-05-04)**: **tag-and-pin** at `v0.29.5-appmilla.1`. Rationale: reproducible builds; standard fork practice. Active dev on `appmilla-fixes-0.29` branch; cut a fresh tag at each shipping moment. Branch tip is mutable — never what consumers should pin to.
 
-## Mechanical plan (10 steps, execute on the GB10)
+## Mechanical plan (11 steps, execute on the GB10)
+
+0. **Capture pre-application baselines** so any regression bisects cleanly to a single landed patch (added 2026-05-04 per task-review addendum, AC-FORK-19):
+
+   ```bash
+   cd ~/Projects/appmilla_github/graphiti
+   .venv/bin/pytest tests/ -k "falkordb" --tb=line 2>&1 | tee /tmp/baseline-falkordb.txt
+   .venv/bin/pytest mcp_server/tests/ --tb=line 2>&1 | tee /tmp/baseline-mcp.txt
+
+   # And against guardkit's monkey-patch test suite (currently runs on un-forked graphiti-core)
+   cd ~/Projects/appmilla_github/guardkit
+   .venv/bin/pytest tests/knowledge/test_falkordb_workaround.py -v 2>&1 | tee /tmp/baseline-workaround.txt
+   ```
+
+   Re-run the same commands after **each** patch commit, with output to `/tmp/post-${COMMIT_SHA:0:7}-*.txt`, and `diff` against the baseline. Any new failure must bisect to a single landed patch — that is the AC-FORK-19 contract.
 
 1. Push the local `~/Projects/appmilla_github/graphiti/` clone to the github fork (or fresh-fork from upstream + apply patches if cleaner).
-2. On a fix branch (`appmilla-fixes-0.29` or similar), apply the RediSearch dash-escape fix to both files (#1 above).
-3. Apply the `openai_generic` factory branch per guardkit TASK-INF-5054's spec (#2 above).
-4. Tag the fix commit (e.g. `v0.29.5-appmilla.1`).
+2. On a fix branch (`appmilla-fixes-0.29` or similar), apply the patches in this order (each as its own commit so they are independently revertable; bisect-safe per addendum execution-flow trace):
+   - **Commit 1**: `git apply patches/001-drop-fulltext-group-filter.patch patches/002-extend-sanitize-strip-backtick.patch patches/003-mcp-early-host-binding.patch` (the three RediSearch / sanitize / MCP-host fixes — already drafted, all verified clean apply against `d0913fe`).
+   - **Commit 2**: apply the `factories.py` auto-detect diff per Decision 6 (rebase + cherry-pick from `~/Projects/appmilla_github/graphiti-official/`). Per addendum Diagram 13 the diff is +14/-0 lines; no schema migration.
+   - **Commit 3**: `git apply patches/004-handle-multiple-group-ids-decorator.patch` (bug #8 — drafted 2026-05-04, derived from upstream PR #1170).
+   - **Commit 4**: `git apply patches/005-edge-search-direct-endpoints.patch` (bug #9 — drafted 2026-05-04, derived from `guardkit/knowledge/falkordb_workaround.py:380-635` reshape).
+   - After each commit, re-run the step 0 baseline diff. **Stop and bisect immediately** if any new failure appears.
+3. (folded into step 2, commit 2)
+4. Tag the final commit (e.g. `v0.29.5-appmilla.1`).
 5. Update `pyproject.toml` in study-tutor: replace `"graphiti-core>=0.29,<0.30"` with `"graphiti-core @ git+https://github.com/appmilla/graphiti.git@v0.29.5-appmilla.1#subdirectory=graphiti_core"`. Refresh venv (`uv sync` or equivalent).
 6. Same update in guardkit + jarvis pyproject.tomls (probably opportunistic, not all at once — guardkit is `>=0.5.0` loose pin, jarvis is `>=0.9,<1`; both are due for a tightening anyway).
 7. Update `~/Projects/appmilla_github/guardkit/scripts/graphiti-mcp-build.sh` to clone from the fork at the tag (replace `git clone https://github.com/getzep/graphiti.git` with the fork URL + `--branch v0.29.5-appmilla.1`).
@@ -156,7 +194,7 @@ The existing punchlist row #1 proposes fixing the FalkorDB RediSearch escape bug
 **Decision 5 (new): RediSearch fulltext fix shape — escape-and-keep, or drop-the-filter?**
 - Recommended: **drop the filter** (matches in-tree workaround, fixes bugs #1 + #11 + #12 simultaneously)
 - Alternative: escape and keep (smaller diff, closer to upstream intent, but leaves bugs #11 + #12 unaddressed)
-- **DECISION**: _TBD — capture chosen approach here before starting work_
+- **DECISION (LOCKED 2026-05-04)**: **drop the filter**. Implemented in [`patches/001-drop-fulltext-group-filter.patch`](../../patches/001-drop-fulltext-group-filter.patch) (verified clean apply against `d0913fe`). Rationale: (a) already production-tested for months in `guardkit/knowledge/falkordb_workaround.py:287-309`, (b) fixes bugs #5 + #11 + #12 in one diff, (c) Cypher `WHERE n.group_id IN $group_ids` backstop verified at `search_ops.py:142-144, 187-189, 240-243, 292-294`, (d) per the addendum execution-flow trace, no execution path produces *worse* output than upstream regardless of bug #8 fix presence.
 
 ### Defence-in-depth code (stays put — do NOT push upstream)
 
@@ -254,7 +292,7 @@ The punchlist row #2 specifies a **new `case 'openai_generic':` arm** alongside 
 **Decision 6 (new): factory routing shape — auto-detect on `api_url`, or explicit `openai_generic` provider?**
 - Recommended: **auto-detect (Approach A)** — matches the already-drafted in-flight patch, zero config migration burden on consumers, reversible with one commit if we change our minds.
 - Alternative: explicit `openai_generic` (Approach B) — better long-term ergonomics, but blocks the DDD demo while we update three consumer pyprojects' configs.
-- **DECISION**: _TBD — capture chosen approach here before applying to the fork_
+- **DECISION (LOCKED 2026-05-04)**: **auto-detect (Approach A)**. Implemented as the in-flight diff at `~/Projects/appmilla_github/graphiti-official/mcp_server/src/services/factories.py` (rebase + apply during GB10 session step 3). Rationale: (a) Graphiti knowledge graph confirms this was the established pattern from 2026-04-03 ("graphiti MCP server factory uses OpenAIGenericClient for non-OpenAI endpoints"), (b) `vLLM does not support the OpenAI Responses API` (knowledge graph), so routing on `base_url` is the correct discrimination axis, (c) zero consumer-config-schema churn, (d) per addendum execution-flow trace Diagram 13, the only theoretical regression (Azure-fronted proxy expecting Responses API) is benign for graphiti-core's structured-output use case which doesn't use Responses-only features.
 
 ### `mcp_server/config/config-guardkit.yaml` — staged file is **stale**, do NOT use
 
@@ -330,6 +368,8 @@ The staged file is a **clean generic Docker-compose-with-Neo4j config template**
 - [ ] **AC-FORK-16** — `mcp_server/config/config-local-neo4j.yaml` from the in-flight staged set committed to the fork (generic template, no secrets). The staged `config-guardkit.yaml` is **discarded entirely** — it is stale (Gemini era, dead `:8001` embedder, wrong 1024-dim) and the actual live config already lives at [guardkit/scripts/graphiti-mcp-config.yaml](../../guardkit/scripts/graphiti-mcp-config.yaml). If a GuardKit-style example is desired in the fork for documentation, derive it fresh from the live config (provider openai → llama-swap, 768-dim, GB10-specific values blanked to `${...}` env placeholders) and name it `config-llama-swap-example.yaml`.
 - [ ] **AC-FORK-17** — After applying the factory fix, smoke-test on the GB10 with the staged guardkit config: `docker logs graphiti-mcp` should show `INFO Using OpenAIGenericClient for non-OpenAI endpoint: http://...` on first LLM call, confirming the auto-detect branch executed.
 - [ ] **AC-FORK-18** — Separate doc-update task filed (NOT part of this fork-patch task) to refresh [guardkit/docs/guides/graphiti-gb10-deployment.md](../../guardkit/docs/guides/graphiti-gb10-deployment.md) for the post-2026-04-29 llama-swap topology: replace the dual-vLLM box diagram, remove the "supersedes Gemini" note, fix the broken supersedes-link at line 10, and update the file map / config-relationships / troubleshooting sections to reflect the single-port `:9000` reality.
+
+- [ ] **AC-FORK-19** *(new 2026-05-04, per task-review addendum)* — Pre-application baseline captured (mechanical-plan step 0). Post-each-commit diff via `diff /tmp/baseline-falkordb.txt /tmp/post-${SHA:0:7}-falkordb.txt` (and the equivalent for `mcp` and `workaround`) shows **no new test failures** for any commit landing patches 001-005 + factories.py. If any new failure appears, the GB10 session pauses, the offending commit is reverted, the cause is investigated against the addendum's regression matrix (`.claude/reviews/TASK-FORK-PATCH-review-addendum-execution-flow.md` §"Regression Matrix"), and the task moves to BLOCKED. New passes (e.g. previously-failing tests in guardkit's `test_falkordb_workaround.py` that now pass against the un-monkeypatched fork) are expected and acceptable.
 
 ## Notes
 

@@ -1,10 +1,12 @@
 ---
 id: TASK-FPA-005
 title: Apply patch 004 (handle_multiple_group_ids decorator >=1) as commit 3
-status: in_review
+status: completed
 created: 2026-05-04T00:00:00Z
-updated: 2026-05-04T12:10:00+01:00
-previous_state: backlog
+updated: 2026-05-04T12:17:00+01:00
+completed: 2026-05-04T12:17:00+01:00
+previous_state: in_review
+completed_location: tasks/completed/fork-patch-application/
 patch_commit: 7a914ec
 test_results:
   status: passed

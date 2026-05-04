@@ -33,6 +33,25 @@ review_results:
     4: tag-and-pin (v0.29.5-appmilla.1)
     5: drop-the-filter (patch 001 already drafted)
     6: auto-detect on base_url (Approach A, already drafted in graphiti-official)
+implementation:
+  feature_id: FEAT-FPA-2026-05
+  feature_folder: tasks/backlog/fork-patch-application/
+  subtasks:
+    - TASK-FPA-001  # Capture pre-application baselines (Wave 1, direct)
+    - TASK-FPA-002  # Push fork to GitHub (Wave 1, manual)
+    - TASK-FPA-003  # Apply patches 001+002+003 (Wave 2, direct)
+    - TASK-FPA-004  # Apply factories.py auto-detect (Wave 2, task-work)
+    - TASK-FPA-005  # Apply patch 004 decorator (Wave 2, direct)
+    - TASK-FPA-006  # Apply patch 005 edge search (Wave 2, direct)
+    - TASK-FPA-007  # Tag v0.29.5-appmilla.1 (Wave 3, manual)
+    - TASK-FPA-008  # Write FORK-NOTES.md (Wave 4, direct)
+    - TASK-FPA-009  # End-to-end verification (Wave 4, direct)
+  cross_repo_followups:
+    - study-tutor: TASK-STU-FORK-PIN  # update pyproject pin to v0.29.5-appmilla.1
+    - guardkit: TASK-GK-FORK-PIN  # pyproject pin + graphiti-mcp-build.sh + MCP_SERVER_HOST export
+    - jarvis: TASK-JAR-FORK-PIN  # update pyproject pin
+    - guardkit: TASK-GK-RETIRE-WORKAROUND  # post-verification, optional
+    - guardkit: TASK-GK-REFRESH-RUNBOOK  # AC-FORK-18, optional doc-update
 ---
 
 # Apply appmilla bug-fix patches to graphiti fork (RediSearch dash-escape + openai_generic factory)
@@ -155,6 +174,19 @@ Suggested commit messages and full apply instructions are in [`patches/README.md
 - [ ] **AC-FORK-07** — `guardkit/scripts/graphiti-mcp-build.sh` updated to clone the fork at the tag. MCP image rebuilt on GB10 with `--no-cache`. Container restarted and reachable at `http://promaxgb10-41b1:8004/mcp`.
 - [ ] **AC-FORK-08** — End-to-end verification (step 9 above): seed runs 25/25, verify_lilymay.py shows populated state, MCP write probe round-trips, MCP read probe with dashed group_id returns populated entity (NO syntax error), container logs show LLM calls hitting `localhost:9000`.
 - [ ] **AC-FORK-09** — G2/G3 in `study-tutor/docs/research/ideas/phase-1-validation.md` flipped from Falsified to Held with evidence per AC-SEED-05 format. TASK-GR-SEED moved to completed. TASK-INF-5054 moved to completed.
+
+## Implementation subtasks
+
+The mechanical plan is broken into nine subtasks under [`tasks/backlog/fork-patch-application/`](./fork-patch-application/) (created 2026-05-04 via `/task-review` `[I]mplement`):
+
+- **Wave 1 (parallel-safe)**: [TASK-FPA-001](./fork-patch-application/TASK-FPA-001-capture-baselines.md) (baselines), [TASK-FPA-002](./fork-patch-application/TASK-FPA-002-push-fork-to-github.md) (push fork)
+- **Wave 2 (sequential — each commit's baseline diff blocks the next)**: [TASK-FPA-003](./fork-patch-application/TASK-FPA-003-apply-redisearch-sanitize-mcp-host-patches.md), [TASK-FPA-004](./fork-patch-application/TASK-FPA-004-apply-factories-auto-detect.md), [TASK-FPA-005](./fork-patch-application/TASK-FPA-005-apply-decorator-patch.md), [TASK-FPA-006](./fork-patch-application/TASK-FPA-006-apply-edge-search-patch.md)
+- **Wave 3**: [TASK-FPA-007](./fork-patch-application/TASK-FPA-007-tag-and-push-release.md) (tag + push)
+- **Wave 4**: [TASK-FPA-008](./fork-patch-application/TASK-FPA-008-write-fork-notes.md) (FORK-NOTES.md), [TASK-FPA-009](./fork-patch-application/TASK-FPA-009-end-to-end-verification.md) (AC-FORK-08 verification)
+
+See [fork-patch-application/IMPLEMENTATION-GUIDE.md](./fork-patch-application/IMPLEMENTATION-GUIDE.md) for wave breakdown, sequencing rationale, and cross-repo follow-up tasks (study-tutor / guardkit / jarvis pyproject pins, MCP container rebuild — these live in the consumer repos' task systems, not in this folder).
+
+To start: `/task-work TASK-FPA-001` on the GB10.
 
 ## Cross-references
 

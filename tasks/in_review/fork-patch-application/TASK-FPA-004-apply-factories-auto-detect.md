@@ -1,9 +1,16 @@
 ---
 id: TASK-FPA-004
 title: Apply factories.py auto-detect (bug #6/#7) as commit 2 — derive from graphiti-original in-flight diff
-status: backlog
+status: in_review
 created: 2026-05-04T00:00:00Z
-updated: 2026-05-04T00:00:00Z
+updated: 2026-05-04T11:32:00+01:00
+previous_state: in_progress
+patch_commit: 85ec55b
+test_results:
+  status: passed
+  baseline_diff: no_new_failures
+  mcp_summary: "32 failed, 11 passed, 2 errors (identical to baseline)"
+  last_run: 2026-05-04T11:32:00+01:00
 priority: high
 task_type: feature
 complexity: 2
@@ -16,10 +23,6 @@ wave: 2
 implementation_mode: direct
 dependencies: [TASK-FPA-003]
 workspace_name: fork-patch-application-wave2-2
-test_results:
-  status: pending
-  coverage: null
-  last_run: null
 ---
 
 # Apply factories.py auto-detect (bug #6/#7)

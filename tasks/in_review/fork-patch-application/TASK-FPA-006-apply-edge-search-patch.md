@@ -1,9 +1,9 @@
 ---
 id: TASK-FPA-006
 title: Apply patch 005 (edge search startNode/endNode) as commit 4
-status: backlog
+status: in_review
 created: 2026-05-04T00:00:00Z
-updated: 2026-05-04T00:00:00Z
+updated: 2026-05-04T13:05:00+01:00
 priority: high
 task_type: feature
 complexity: 3
@@ -16,10 +16,13 @@ wave: 2
 implementation_mode: direct
 dependencies: [TASK-FPA-005]
 workspace_name: fork-patch-application-wave2-4
+patch_commit: 9198756
 test_results:
-  status: pending
-  coverage: null
-  last_run: null
+  status: passed
+  baseline_diff: no_new_failures
+  falkordb_summary: "5 failed, 24 passed, 1 skipped, 42 errors (identical to baseline; runtime 6.45s -> 2.56s, ~2.5x faster)"
+  workaround_summary: "43 passed, 1 warning (identical to baseline; no new passes — guardkit's runtime monkey-patch already covers bugs #8/#9)"
+  last_run: 2026-05-04T13:00:00+01:00
 ---
 
 # Apply patch 005 (edge search startNode/endNode reshape)

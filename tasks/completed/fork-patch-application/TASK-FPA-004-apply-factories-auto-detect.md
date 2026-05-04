@@ -1,10 +1,12 @@
 ---
 id: TASK-FPA-004
 title: Apply factories.py auto-detect (bug #6/#7) as commit 2 — derive from graphiti-original in-flight diff
-status: in_review
+status: completed
 created: 2026-05-04T00:00:00Z
-updated: 2026-05-04T11:32:00+01:00
-previous_state: in_progress
+updated: 2026-05-04T11:38:00+01:00
+completed: 2026-05-04T11:38:00+01:00
+previous_state: in_review
+completed_location: tasks/completed/fork-patch-application/
 patch_commit: 85ec55b
 test_results:
   status: passed

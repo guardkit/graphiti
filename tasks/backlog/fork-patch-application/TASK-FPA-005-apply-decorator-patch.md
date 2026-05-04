@@ -32,7 +32,7 @@ test_results:
 
 ```bash
 cd ~/Projects/appmilla_github/graphiti
-git checkout appmilla-fixes-0.29
+git checkout guardkit-fixes-0.29
 git apply --check patches/004-handle-multiple-group-ids-decorator.patch
 git apply patches/004-handle-multiple-group-ids-decorator.patch
 
@@ -57,7 +57,7 @@ diff /tmp/baseline-falkordb.txt /tmp/post-${SHA}-falkordb.txt || echo "DIFF FOUN
 ## Acceptance Criteria
 
 - [ ] `git apply --check patches/004-handle-multiple-group-ids-decorator.patch` passes.
-- [ ] Patch landed as a single commit on `appmilla-fixes-0.29`.
+- [ ] Patch landed as a single commit on `guardkit-fixes-0.29`.
 - [ ] Baseline diff for graphiti-core falkordb suite shows no new failures.
 - [ ] Manual sanity check: with the patches landed, a single-group search through `Graphiti.search()` against a dashed group_id (`['proj-foo']`) is no longer returning `[]` for known-populated graphs. Defer the full smoke test to TASK-FPA-009.
 

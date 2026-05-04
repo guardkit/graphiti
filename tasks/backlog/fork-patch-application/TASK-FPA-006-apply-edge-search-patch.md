@@ -32,7 +32,7 @@ test_results:
 
 ```bash
 cd ~/Projects/appmilla_github/graphiti
-git checkout appmilla-fixes-0.29
+git checkout guardkit-fixes-0.29
 git apply --check patches/005-edge-search-direct-endpoints.patch
 git apply patches/005-edge-search-direct-endpoints.patch
 
@@ -65,7 +65,7 @@ diff /tmp/baseline-workaround.txt /tmp/post-${SHA}-workaround.txt || echo "DIFF 
 ## Acceptance Criteria
 
 - [ ] `git apply --check patches/005-edge-search-direct-endpoints.patch` passes.
-- [ ] Patch landed as a single commit on `appmilla-fixes-0.29`.
+- [ ] Patch landed as a single commit on `guardkit-fixes-0.29`.
 - [ ] Baseline diff for graphiti-core falkordb suite shows no new failures.
 - [ ] Baseline diff for guardkit `test_falkordb_workaround.py` may show **new passes** (tests previously requiring `apply_falkordb_workaround()` runtime monkey-patch may now pass against the unwrapped fork). New failures are unacceptable; new passes are expected per AC-FORK-11.
 

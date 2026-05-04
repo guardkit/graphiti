@@ -1,4 +1,4 @@
-# appmilla fork — pre-built patches
+# guardkit fork — pre-built patches
 
 This directory holds ready-to-apply patches drafted ahead of the GB10 fork-application session for [TASK-FORK-PATCH](../tasks/backlog/TASK-FORK-PATCH-apply-appmilla-bug-fix-patches.md). Each patch is a unified diff (`diff -u`) that applies cleanly via `git apply -p1` (or `patch -p1`) against this fork at version 0.29.0 (verified 2026-05-04 — all five pass `git apply --check` individually and together against `d0913fe`).
 
@@ -12,7 +12,7 @@ This directory holds ready-to-apply patches drafted ahead of the GB10 fork-appli
 | 4 | `004-handle-multiple-group-ids-decorator.patch` *(new 2026-05-04)* | #8 (`handle_multiple_group_ids` decorator skips driver-clone for single-group calls because of `len > 1` check) — derived from upstream PR [#1170](https://github.com/getzep/graphiti/pull/1170) / issue [#1161](https://github.com/getzep/graphiti/issues/1161) | `graphiti_core/decorators.py` (`handle_multiple_group_ids` wrapper) |
 | 5 | `005-edge-search-direct-endpoints.patch` *(new 2026-05-04)* | #9 (`edge_fulltext_search` and `edge_bfs_search` use O(n×m) re-MATCH on `rel.uuid` to re-find endpoints) — derived from upstream issue [#1272](https://github.com/getzep/graphiti/issues/1272) and `guardkit/knowledge/falkordb_workaround.py:380-635` | `graphiti_core/search/search_utils.py` (default `match_query` for `edge_fulltext_search`; default-else branch for `edge_bfs_search`) |
 
-These five patches still do **not** cover the `openai_generic` / `responses.parse` factory routing (bugs #6/#7) — that's the in-flight diff already drafted at `~/Projects/appmilla_github/graphiti-official/mcp_server/src/services/factories.py` per the task's "In-flight patch already drafted" section. Apply that as a separate sixth commit during the GB10 session (rebase onto current `d0913fe` first).
+These five patches still do **not** cover the `openai_generic` / `responses.parse` factory routing (bugs #6/#7) — that's the in-flight diff already drafted at `~/Projects/appmilla_github/graphiti-original/mcp_server/src/services/factories.py` per the task's "In-flight patch already drafted" section. Apply that as a separate sixth commit during the GB10 session (rebase onto current `d0913fe` first).
 
 Decision 5 in the task file (drop-filter vs escape-and-keep) is **locked to drop-filter** as of 2026-05-04 — patch 1 implements it. Decision 6 (auto-detect vs explicit `openai_generic`) is **locked to auto-detect**; the in-flight diff matches that shape.
 
@@ -121,7 +121,7 @@ guardkit/knowledge/falkordb_workaround.py:380-635 (consumer-side patch).
 
 ## What's NOT in this directory (and why)
 
-- **Bug #6/#7 — `openai_generic` factory routing**: addressed by the in-flight diff at `~/Projects/appmilla_github/graphiti-official/mcp_server/src/services/factories.py` (Approach A — auto-detect on `base_url`). Apply that diff verbatim per the task's "In-flight patch already drafted" section.
+- **Bug #6/#7 — `openai_generic` factory routing**: addressed by the in-flight diff at `~/Projects/appmilla_github/graphiti-original/mcp_server/src/services/factories.py` (Approach A — auto-detect on `base_url`). Apply that diff verbatim per the task's "In-flight patch already drafted" section.
 - **Patches for the verification ACs themselves** (smoke tests, container rebuild, doc updates) — those live in the task file's mechanical plan, not as code diffs.
 
 ## Verifying after apply

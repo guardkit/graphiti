@@ -41,14 +41,14 @@ test_results:
 ## Suggested structure
 
 ```markdown
-# appmilla fork — FORK-NOTES.md
+# guardkit fork — FORK-NOTES.md
 
 ## What this fork is
 
 This is a fork of [getzep/graphiti](https://github.com/getzep/graphiti) at version 0.29.0
-(commit 56cf7b3) with bug-fix patches applied for the appmilla deployment stack
-(study-tutor, guardkit, jarvis). Maintained by appmilla; cuts release tags as
-`vX.Y.Z-appmilla.N`.
+(commit 56cf7b3) with bug-fix patches applied for the guardkit deployment stack
+(study-tutor, guardkit, jarvis). Maintained by guardkit; cuts release tags as
+`vX.Y.Z-guardkit.N`.
 
 ## Patches in this fork
 
@@ -85,14 +85,14 @@ fixes upstream once they're stable here.]
 ## Steps
 
 1. Draft `FORK-NOTES.md` per the structure above.
-2. Commit on `appmilla-fixes-0.29` with message `docs: add FORK-NOTES.md (TASK-FORK-PATCH AC-FORK-05)`.
+2. Commit on `guardkit-fixes-0.29` with message `docs: add FORK-NOTES.md (TASK-FORK-PATCH AC-FORK-05)`.
 3. Do NOT push a new tag for this — FORK-NOTES.md is documentation that can land post-tag. (Optional: if a GitHub Release was created at TASK-FPA-007, copy the FORK-NOTES.md content into the release body.)
 
 ## Acceptance Criteria
 
 - [ ] `FORK-NOTES.md` exists at the fork repo root.
 - [ ] Content covers: forked-from version + commit, patch inventory with bug IDs, locked decisions, semantic changes, bug-#4-vs-#5 distinction, cross-references, maintenance plan.
-- [ ] Committed on `appmilla-fixes-0.29` and pushed to the appmilla remote.
+- [ ] Committed on `guardkit-fixes-0.29` and pushed to the origin remote.
 - [ ] No code changes in the same commit (docs-only).
 
 ## Cross-references

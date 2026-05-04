@@ -5,7 +5,7 @@
              group_ids = args[group_ids_pos]
 
 -        # Only handle FalkorDB with multiple group_ids
-+        # appmilla fork (TASK-FORK-PATCH bug #8): take the FalkorDB
++        # guardkit fork (TASK-FORK-PATCH bug #8): take the FalkorDB
 +        # per-group driver-clone path for single-group calls too, not only
 +        # multi-group calls. Upstream's `len > 1` skipped single-group
 +        # calls, leaving them on the shared driver and the wrong named

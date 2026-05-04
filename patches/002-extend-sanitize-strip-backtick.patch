@@ -4,7 +4,7 @@
                  '|': ' ',
                  '/': ' ',
                  '\\': ' ',
-+                # appmilla fork (TASK-FORK-PATCH bug #10): backtick survives
++                # guardkit fork (TASK-FORK-PATCH bug #10): backtick survives
 +                # upstream's strip list; markdown-style `path/to/file.md`
 +                # references in episode bodies otherwise leak `` ` `` into
 +                # entity names and break RediSearch syntax at index time.
@@ -18,7 +18,7 @@
          '|': ' ',
          '/': ' ',
          '\\': ' ',
-+        # appmilla fork (TASK-FORK-PATCH bug #10): backtick survives
++        # guardkit fork (TASK-FORK-PATCH bug #10): backtick survives
 +        # upstream's strip list; see matching change in
 +        # falkordb_driver.py:sanitize for rationale.
 +        '`': ' ',

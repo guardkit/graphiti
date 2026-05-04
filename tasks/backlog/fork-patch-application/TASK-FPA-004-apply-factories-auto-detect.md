@@ -1,6 +1,6 @@
 ---
 id: TASK-FPA-004
-title: Apply factories.py auto-detect (bug #6/#7) as commit 2 — derive from graphiti-official in-flight diff
+title: Apply factories.py auto-detect (bug #6/#7) as commit 2 — derive from graphiti-original in-flight diff
 status: backlog
 created: 2026-05-04T00:00:00Z
 updated: 2026-05-04T00:00:00Z
@@ -24,42 +24,45 @@ test_results:
 
 # Apply factories.py auto-detect (bug #6/#7)
 
-**WHY**: Decision 6 is locked to **Approach A — auto-detect on `base_url`** (zero consumer-config-schema churn; established pattern per knowledge graph). The patch is **already drafted** as staged-but-unpushed changes at `~/Projects/appmilla_github/graphiti-official/mcp_server/src/services/factories.py` against upstream commit `9cdcc93`. Per the parent task's "In-flight patch already drafted" section, the diff is +14/-0 lines and has no conflict with this fork's two extra commits (`164030f`, `56cf7b3`).
+**WHY**: Decision 6 is locked to **Approach A — auto-detect on `base_url`** (zero consumer-config-schema churn; established pattern per knowledge graph). The patch shape is **fully specified** in the parent task at `TASK-FORK-PATCH §"Diff: mcp_server/src/services/factories.py"` (lines 206-241): `+14/-0` lines, no conflict with this fork's two extra commits (`164030f`, `56cf7b3`).
 
-**WHAT**: Cherry-pick the staged diff from `graphiti-official` onto current `appmilla-fixes-0.29`, verify it still compiles, commit as commit 2, and re-run the baseline diff.
+**WHAT**: Apply the diff to the fork's `factories.py`, verify it compiles, commit as commit 2, and re-run the baseline diff.
+
+## Important: where the diff lives
+
+The parent task originally referred to "staged-but-unpushed changes" in `~/Projects/appmilla_github/graphiti-original/`. **Those staged changes are on the Macbook**, not on the GB10. On the GB10 today (verified 2026-05-04), `~/Projects/appmilla_github/graphiti-original/` has a clean working tree with no staged changes and no `OpenAIGenericClient` import in `factories.py`.
+
+**Two execution paths**:
+
+- **Path A — sync from Macbook**: on the Mac, run `cd ~/Projects/appmilla_github/graphiti-original && git diff > /tmp/factories-autodetect.diff` and `cd ~/Projects/appmilla_github/graphiti-original && git diff --cached >> /tmp/factories-autodetect.diff` (combine working-tree + staged) and `scp /tmp/factories-autodetect.diff promaxgb10-41b1:/tmp/`. Then on the GB10 use that file as the patch source.
+
+- **Path B — derive from the parent task spec**: the full +14/-0 diff is reproduced verbatim at TASK-FORK-PATCH lines 206-241. Save it as `patches/006-factories-auto-detect.patch` and apply it like the other five patches. This avoids the Mac round-trip and produces a patch file consistent with the rest of `patches/`. Recommended.
+
+The recommended path (B) is captured in the steps below.
 
 ## Bugs covered
 
 - **#6**: graphiti-mcp `factories.py` `openai` branch silently ignores `api_url` → falls through to api.openai.com.
 - **#7**: `OpenAIClient` calls `responses.parse()` instead of `chat.completions.create` → 404 against local OpenAI-compatible servers like vLLM/llama-swap.
 
-## Steps
+## Steps (Path B — recommended)
+
+**Pre-requisite**: `patches/006-factories-auto-detect.patch` exists at the fork repo root. If it doesn't exist yet, draft it first by transcribing the diff at TASK-FORK-PATCH lines 206-241 verbatim into a unified diff with the same `--- a/...`/`+++ b/...` header style used by patches 001-005. Verify with `git apply --check patches/006-factories-auto-detect.patch`.
 
 ```bash
-# 1. Capture the staged diff from the upstream-tracker clone
-cd ~/Projects/appmilla_github/graphiti-official
-git status                                       # expect: staged changes on factories.py + two new YAMLs
-git diff --cached mcp_server/src/services/factories.py > /tmp/factories-autodetect.diff
-cat /tmp/factories-autodetect.diff               # eyeball: should be +14/-0
-
-# 2. Apply to the fork
+# 1. Pre-apply check
 cd ~/Projects/appmilla_github/graphiti
-git checkout appmilla-fixes-0.29
-git apply --check /tmp/factories-autodetect.diff || echo "Conflict — manually port instead"
-git apply /tmp/factories-autodetect.diff
+git checkout guardkit-fixes-0.29
+git apply --check patches/006-factories-auto-detect.patch
 
-# 3. ALSO commit the generic config-local-neo4j.yaml from the staged set
-#    (per AC-FORK-16; the staged config-guardkit.yaml is STALE and must NOT be committed)
-cp ~/Projects/appmilla_github/graphiti-official/mcp_server/config/config-local-neo4j.yaml \
-   mcp_server/config/config-local-neo4j.yaml
-# DO NOT copy mcp_server/config/config-guardkit.yaml — it's a Gemini-era stale snapshot
-# with dead :8001 embedder and wrong 1024-dim. See parent task lines 259-322.
+# 2. Apply
+git apply patches/006-factories-auto-detect.patch
 
-# 4. Quick sanity-check: import factories.py to confirm it parses
+# 3. Quick sanity-check: import factories.py to confirm it parses
 .venv/bin/python -c "from mcp_server.src.services import factories; print('factories.py imports OK')"
 
-# 5. Stage and commit
-git add mcp_server/src/services/factories.py mcp_server/config/config-local-neo4j.yaml
+# 4. Stage and commit
+git add mcp_server/src/services/factories.py
 git commit -m "fix(factories): auto-detect non-OpenAI endpoints, route to OpenAIGenericClient
 
 When provider='openai' but api_url points at a non-api.openai.com host
@@ -68,25 +71,30 @@ LLMConfig and route to OpenAIGenericClient (Chat Completions) rather
 than OpenAIClient (Responses API, which vLLM doesn't support). Default
 behaviour for genuine OpenAI endpoints is preserved.
 
-Also adds mcp_server/config/config-local-neo4j.yaml as a clean generic
-Docker-compose-with-Neo4j example template.
-
 Refs: TASK-FORK-PATCH bugs #6/#7; guardkit TASK-INF-5054;
 graphiti knowledge-graph fact 2026-04-03 'graphiti MCP server factory
 uses OpenAIGenericClient for non-OpenAI endpoints'."
 
-# 6. Baseline diff (AC-FORK-19)
+# 5. Baseline diff (AC-FORK-19)
 SHA=$(git rev-parse --short HEAD)
 .venv/bin/pytest mcp_server/tests/ --tb=line 2>&1 | tee /tmp/post-${SHA}-mcp.txt
 diff /tmp/baseline-mcp.txt /tmp/post-${SHA}-mcp.txt || echo "DIFF FOUND — investigate"
 ```
 
+## Notes on `config-local-neo4j.yaml` and `config-guardkit.yaml`
+
+The parent task originally proposed adding two YAML files alongside the factories.py diff (per AC-FORK-16). On the GB10 those files don't exist in `graphiti-original/mcp_server/config/`. **Defer both YAML additions to a follow-up task** — they're orthogonal to the factories.py fix and the verification path uses the live config at `guardkit/scripts/graphiti-mcp-config.yaml` which is already correct.
+
+If you do want the example template, the `config-local-neo4j.yaml` would need to be authored fresh from the upstream `mcp_server/config/config-docker-neo4j.yaml` template with secrets stripped. This is **out of scope** for TASK-FPA-004; file as `TASK-FPA-CFGEX` if desired.
+
+The stale `config-guardkit.yaml` (Gemini-era, dead `:8001` embedder, wrong 1024-dim per parent task lines 259-322) must **never** be committed.
+
 ## Acceptance Criteria
 
-- [ ] Staged diff from `graphiti-official` cherry-picked onto `appmilla-fixes-0.29` cleanly. If conflict: manually port the +14 lines per the diff in TASK-FORK-PATCH "In-flight patch already drafted" section.
+- [ ] `patches/006-factories-auto-detect.patch` exists, transcribed verbatim from TASK-FORK-PATCH lines 206-241.
+- [ ] `git apply --check patches/006-factories-auto-detect.patch` passes.
+- [ ] Patch landed as a single commit on `guardkit-fixes-0.29`.
 - [ ] `factories.py` change is exactly the auto-detect form (Approach A): `base_url = config.providers.openai.api_url`, `is_openai_endpoint = base_url is None or 'api.openai.com' in base_url`, route to `OpenAIGenericClient` if not.
-- [ ] `mcp_server/config/config-local-neo4j.yaml` committed (clean generic template).
-- [ ] **`mcp_server/config/config-guardkit.yaml` is NOT committed** (stale Gemini-era foot-gun per parent task §"`mcp_server/config/config-guardkit.yaml` — staged file is **stale**, do NOT use").
 - [ ] `python -c "from mcp_server.src.services import factories"` returns 0.
 - [ ] Baseline diff for `mcp` suite shows no new failures.
 

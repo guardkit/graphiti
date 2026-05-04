@@ -34,8 +34,8 @@ test_results:
 
 These are NOT subtasks of this graphiti fork-patch feature — they live in their own repos' task systems. File them there before starting this verification:
 
-1. **study-tutor**: update `pyproject.toml` to pin `graphiti-core @ git+https://github.com/appmilla/graphiti.git@v0.29.5-appmilla.1#subdirectory=graphiti_core`. Refresh venv via `uv sync`.
-2. **guardkit**: update `pyproject.toml` to pin the same. Update `guardkit/scripts/graphiti-mcp-build.sh` to clone fork at the tag (replace `git clone https://github.com/getzep/graphiti.git` with `git clone --branch v0.29.5-appmilla.1 https://github.com/appmilla/graphiti.git`). Add `MCP_SERVER_HOST=0.0.0.0` env export to `guardkit/scripts/graphiti-mcp.sh` (paired with bootstrap-shim retirement decision).
+1. **study-tutor**: update `pyproject.toml` to pin `graphiti-core @ git+https://github.com/guardkit/graphiti.git@v0.29.5-guardkit.1#subdirectory=graphiti_core`. Refresh venv via `uv sync`.
+2. **guardkit**: update `pyproject.toml` to pin the same. Update `guardkit/scripts/graphiti-mcp-build.sh` to clone fork at the tag (replace `git clone https://github.com/getzep/graphiti.git` with `git clone --branch v0.29.5-guardkit.1 https://github.com/guardkit/graphiti.git`). Add `MCP_SERVER_HOST=0.0.0.0` env export to `guardkit/scripts/graphiti-mcp.sh` (paired with bootstrap-shim retirement decision).
 3. **jarvis**: update `pyproject.toml` to pin the same.
 4. **MCP container rebuild**: run `./scripts/graphiti-mcp-build.sh --no-cache` then `./scripts/graphiti-mcp.sh` to restart the container at `http://promaxgb10-41b1:8004/mcp`.
 
@@ -56,7 +56,7 @@ grep "succeeded_writes" /tmp/verify-seed.log     # expect: succeeded_writes=25
 # 3. MCP write probe
 mcp__graphiti__add_memory(
   name="fork-verify",
-  episode_body="appmilla fork v0.29.5-appmilla.1 verification probe — 2026-05-04",
+  episode_body="guardkit fork v0.29.5-guardkit.1 verification probe — 2026-05-04",
   group_id="guardkit__test_fork",
   source="text"
 )

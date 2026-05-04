@@ -1,6 +1,6 @@
 ---
 id: TASK-FPA-007
-title: Tag v0.29.5-appmilla.1 and push tag to fork remote
+title: Tag v0.29.5-guardkit.1 and push tag to fork remote
 status: backlog
 created: 2026-05-04T00:00:00Z
 updated: 2026-05-04T00:00:00Z
@@ -22,22 +22,22 @@ test_results:
   last_run: null
 ---
 
-# Tag v0.29.5-appmilla.1 and push tag
+# Tag v0.29.5-guardkit.1 and push tag
 
-**WHY**: Decision 4 is locked to **tag-and-pin**. After all four patch-application commits land cleanly on `appmilla-fixes-0.29`, cut a release tag so consumer pyprojects can pin reproducibly.
+**WHY**: Decision 4 is locked to **tag-and-pin**. After all four patch-application commits land cleanly on `guardkit-fixes-0.29`, cut a release tag so consumer pyprojects can pin reproducibly.
 
-**WHAT**: Create an annotated tag, push it to the `appmilla` remote, and verify it's visible from the GitHub web UI / `gh release list`.
+**WHAT**: Create an annotated tag, push it to the `origin` remote, and verify it's visible from the GitHub web UI / `gh release list`.
 
 ## Steps
 
 ```bash
 cd ~/Projects/appmilla_github/graphiti
-git checkout appmilla-fixes-0.29
+git checkout guardkit-fixes-0.29
 git log --oneline -8                              # confirm last 4-5 commits are the patch applications
 
 # Annotated tag with summary message (use HEREDOC for multiline)
-git tag -a v0.29.5-appmilla.1 -m "$(cat <<'EOF'
-appmilla fork release: graphiti-core 0.29.0 + appmilla bug fixes 1-13
+git tag -a v0.29.5-guardkit.1 -m "$(cat <<'EOF'
+guardkit fork release: graphiti-core 0.29.0 + guardkit bug fixes 1-13
 
 Forked from getzep/graphiti at version 0.29.0 (commit 56cf7b3). Includes:
 
@@ -61,19 +61,19 @@ EOF
 )"
 
 # Push tag
-git push appmilla v0.29.5-appmilla.1
+git push origin v0.29.5-guardkit.1
 
 # Verify
-gh release list --repo appmilla/graphiti        # tag should appear (release optional)
-gh api repos/appmilla/graphiti/git/refs/tags/v0.29.5-appmilla.1
+gh release list --repo guardkit/graphiti        # tag should appear (release optional)
+gh api repos/guardkit/graphiti/git/refs/tags/v0.29.5-guardkit.1
 ```
 
 ## Acceptance Criteria
 
-- [ ] Annotated tag `v0.29.5-appmilla.1` created locally on the tip of `appmilla-fixes-0.29`.
-- [ ] Tag pushed to `appmilla` remote.
-- [ ] `gh api repos/appmilla/graphiti/git/refs/tags/v0.29.5-appmilla.1` returns 200 with the tag's commit SHA.
-- [ ] Tag is reachable from `pip install git+https://github.com/appmilla/graphiti.git@v0.29.5-appmilla.1` (verified by a scratch venv install — defer to TASK-FPA-009).
+- [ ] Annotated tag `v0.29.5-guardkit.1` created locally on the tip of `guardkit-fixes-0.29`.
+- [ ] Tag pushed to `origin` remote.
+- [ ] `gh api repos/guardkit/graphiti/git/refs/tags/v0.29.5-guardkit.1` returns 200 with the tag's commit SHA.
+- [ ] Tag is reachable from `pip install git+https://github.com/guardkit/graphiti.git@v0.29.5-guardkit.1` (verified by a scratch venv install — defer to TASK-FPA-009).
 
 ## Cross-references
 
@@ -82,4 +82,4 @@ gh api repos/appmilla/graphiti/git/refs/tags/v0.29.5-appmilla.1
 ## Notes
 
 - A GitHub Release (with formatted release notes) is **optional**. The tag is what consumers pin against; the release page is documentation. If creating one: paste FORK-NOTES.md content into the release body when it exists (i.e. after TASK-FPA-008 lands).
-- Subsequent appmilla-fork releases bump the suffix: `v0.29.5-appmilla.2`, etc. Re-base from upstream getzep/graphiti tags as they ship.
+- Subsequent guardkit-fork releases bump the suffix: `v0.29.5-guardkit.2`, etc. Re-base from upstream getzep/graphiti tags as they ship.

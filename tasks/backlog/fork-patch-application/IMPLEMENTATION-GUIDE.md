@@ -26,7 +26,7 @@ Wave 2 — Patch application (STRICTLY SEQUENTIAL — each commit's baseline dif
 └── TASK-FPA-006 — Apply patch 005 (commit 4, 30 min, direct)
 
 Wave 3 — Tag and publish
-└── TASK-FPA-007 — Tag v0.29.5-appmilla.1 + push (15 min, manual)
+└── TASK-FPA-007 — Tag v0.29.5-guardkit.1 + push (15 min, manual)
 
 Wave 4 — Documentation and verification (sequential, can be parallelised
                                           with the cross-repo work below)
@@ -52,7 +52,7 @@ After Wave 3 completes (tag exists and is pushed), file these in their own task 
 
 | Repo | Action | Suggested task ID |
 |------|--------|-------------------|
-| study-tutor | Update `pyproject.toml` to pin `graphiti-core @ git+https://github.com/appmilla/graphiti.git@v0.29.5-appmilla.1#subdirectory=graphiti_core`; refresh venv; run baseline test suite | `TASK-STU-FORK-PIN` |
+| study-tutor | Update `pyproject.toml` to pin `graphiti-core @ git+https://github.com/guardkit/graphiti.git@v0.29.5-guardkit.1#subdirectory=graphiti_core`; refresh venv; run baseline test suite | `TASK-STU-FORK-PIN` |
 | guardkit | Same `pyproject.toml` update; update `scripts/graphiti-mcp-build.sh` to clone fork at the tag; add `MCP_SERVER_HOST=0.0.0.0` export to `scripts/graphiti-mcp.sh`; rebuild MCP container with `--no-cache` | `TASK-GK-FORK-PIN` |
 | jarvis | Same `pyproject.toml` update | `TASK-JAR-FORK-PIN` |
 | guardkit | (Optional, post-verification) Remove `apply_falkordb_workaround()` from `guardkit/knowledge/graphiti_client.py:62-63` once the fork eliminates the need; remove the corresponding monkey-patch at `falkordb_workaround.py` | `TASK-GK-RETIRE-WORKAROUND` |
@@ -65,9 +65,9 @@ These are required for TASK-FPA-009 (end-to-end verification) to pass. If any ar
 The six TASK-FORK-PATCH decisions (locked 2026-05-04 per the review) are:
 
 1. **0.29.x**: fork is at 0.29.0, head `d0913fe`. No version selection needed.
-2. **Public**: `appmilla/graphiti` (or personal fallback if org doesn't exist).
-3. **`appmilla` org**, else personal account.
-4. **Tag-and-pin**, releasing as `v0.29.5-appmilla.1`.
+2. **Public**: `guardkit/graphiti` (or personal fallback if org doesn't exist).
+3. **`guardkit` org**, else personal account.
+4. **Tag-and-pin**, releasing as `v0.29.5-guardkit.1`.
 5. **Drop-the-filter** for RediSearch fulltext (patch 001).
 6. **Auto-detect on `base_url`** for factory routing (factories.py commit 2).
 
@@ -128,7 +128,7 @@ From [.claude/reviews/TASK-FORK-PATCH-review-addendum-execution-flow.md](../../.
 The feature is complete when:
 
 - All nine subtasks (TASK-FPA-001 through 009) are in `tasks/completed/`.
-- The fork tag `v0.29.5-appmilla.1` is pushed and pinnable.
+- The fork tag `v0.29.5-guardkit.1` is pushed and pinnable.
 - All four AC-FORK-08 sub-criteria pass in the live verification.
 - AC-FORK-09 flips are actioned (G2/G3 to Held in study-tutor; cross-repo task moves).
 - AC-FORK-19's final post-tag baseline diff shows no new failures.

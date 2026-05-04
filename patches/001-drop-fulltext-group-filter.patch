@@ -12,7 +12,7 @@
 -            escaped_group_ids = [f'"{gid}"' for gid in group_ids]
 -            group_values = '|'.join(escaped_group_ids)
 -            group_filter = f'(@group_id:{group_values})'
-+        # appmilla fork (TASK-FORK-PATCH bugs #5/#11): the upstream
++        # guardkit fork (TASK-FORK-PATCH bugs #5/#11): the upstream
 +        # `(@group_id:"...")` fulltext filter is unreliable on FalkorDB.
 +        # RediSearch tokenises group_ids at index time (so underscores split
 +        # tokens) and parses dashes as NOT operators inside the double-quote
@@ -28,7 +28,7 @@
          if len(sanitized_query.split(' ')) + len(group_ids or '') >= max_query_length:
              return ''
  
-+        # appmilla fork (TASK-FORK-PATCH bug #12): if the query is empty after
++        # guardkit fork (TASK-FORK-PATCH bug #12): if the query is empty after
 +        # stopword removal, return RediSearch's match-all wildcard rather than
 +        # producing the invalid `()` syntax that crashes the index lookup.
 +        if not sanitized_query:
@@ -49,7 +49,7 @@
 -        escaped_group_ids = [f'"{gid}"' for gid in group_ids]
 -        group_values = '|'.join(escaped_group_ids)
 -        group_filter = f'(@group_id:{group_values})'
-+    # appmilla fork (TASK-FORK-PATCH bugs #5/#11): drop the `(@group_id:...)`
++    # guardkit fork (TASK-FORK-PATCH bugs #5/#11): drop the `(@group_id:...)`
 +    # prefix — group isolation comes from the multi-graph driver clone plus
 +    # the Cypher WHERE clause, not from the fulltext filter. See the matching
 +    # change in falkordb_driver.py:build_fulltext_query for full rationale.
@@ -61,7 +61,7 @@
      if len(sanitized_query.split(' ')) + len(group_ids or '') >= max_query_length:
          return ''
  
-+    # appmilla fork (TASK-FORK-PATCH bug #12): match-all wildcard for empty
++    # guardkit fork (TASK-FORK-PATCH bug #12): match-all wildcard for empty
 +    # post-stopword queries, rather than emitting invalid `()` syntax.
 +    if not sanitized_query:
 +        return '*'

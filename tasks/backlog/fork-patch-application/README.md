@@ -7,19 +7,19 @@
 
 ## Problem statement
 
-`getzep/graphiti` (the upstream library this fork is based on) has at least 13 audit-confirmed defects affecting the appmilla deployment stack across study-tutor, guardkit, jarvis, and the GB10's MCP container. Five of those defects (#5, #10, #11, #12, #13) live in graphiti-core's FalkorDB driver and the graphiti-mcp host-binding init order; two more (#6, #7) live in the MCP server's LLM-client factory routing; two more (#8, #9) live in the multi-group decorator and the edge-search Cypher.
+`getzep/graphiti` (the upstream library this fork is based on) has at least 13 audit-confirmed defects affecting the guardkit deployment stack across study-tutor, guardkit, jarvis, and the GB10's MCP container. Five of those defects (#5, #10, #11, #12, #13) live in graphiti-core's FalkorDB driver and the graphiti-mcp host-binding init order; two more (#6, #7) live in the MCP server's LLM-client factory routing; two more (#8, #9) live in the multi-group decorator and the edge-search Cypher.
 
 Patches in consumer code (study-tutor, guardkit, jarvis venvs + the GB10 MCP container) don't propagate — bugs do. The audit's strategic decision (2026-05-03): fork getzep/graphiti, apply the known fixes in one place, point all consumers at the fork.
 
 ## Solution approach
 
-Land six commits on a fork branch (`appmilla-fixes-0.29`):
+Land six commits on a fork branch (`guardkit-fixes-0.29`):
 
 1. **Commit 1** — Patches 001+002+003 (RediSearch drop-filter + sanitize backtick + MCP host binding)
-2. **Commit 2** — factories.py auto-detect (bug #6/#7), derived from the in-flight diff at `~/Projects/appmilla_github/graphiti-official/`
+2. **Commit 2** — factories.py auto-detect (bug #6/#7), derived from the in-flight diff at `~/Projects/appmilla_github/graphiti-original/`
 3. **Commit 3** — Patch 004 (handle_multiple_group_ids decorator, bug #8)
 4. **Commit 4** — Patch 005 (edge search startNode/endNode reshape, bug #9)
-5. **Commit 5** — Tag `v0.29.5-appmilla.1`
+5. **Commit 5** — Tag `v0.29.5-guardkit.1`
 6. **Commit 6** — `FORK-NOTES.md` documentation (post-tag, optional)
 
 Each patch-application commit runs an AC-FORK-19 baseline diff against pre-application baselines so any new test failure bisects cleanly.
@@ -31,12 +31,12 @@ After the tag lands, file follow-up tasks in study-tutor, guardkit, and jarvis t
 | ID | Title | Wave | Mode | Min |
 |----|-------|------|------|-----|
 | [TASK-FPA-001](TASK-FPA-001-capture-baselines.md) | Capture pre-application test baselines | 1 | direct | 15 |
-| [TASK-FPA-002](TASK-FPA-002-push-fork-to-github.md) | Push fork to GitHub (`appmilla/graphiti`) | 1 | manual | 30 |
+| [TASK-FPA-002](TASK-FPA-002-push-fork-to-github.md) | Push fork to GitHub (`guardkit/graphiti`) | 1 | manual | 30 |
 | [TASK-FPA-003](TASK-FPA-003-apply-redisearch-sanitize-mcp-host-patches.md) | Apply patches 001+002+003 (commit 1) | 2 | direct | 30 |
 | [TASK-FPA-004](TASK-FPA-004-apply-factories-auto-detect.md) | Apply factories.py auto-detect (commit 2) | 2 | task-work | 60 |
 | [TASK-FPA-005](TASK-FPA-005-apply-decorator-patch.md) | Apply patch 004 (commit 3) | 2 | direct | 20 |
 | [TASK-FPA-006](TASK-FPA-006-apply-edge-search-patch.md) | Apply patch 005 (commit 4) | 2 | direct | 30 |
-| [TASK-FPA-007](TASK-FPA-007-tag-and-push-release.md) | Tag `v0.29.5-appmilla.1` + push | 3 | manual | 15 |
+| [TASK-FPA-007](TASK-FPA-007-tag-and-push-release.md) | Tag `v0.29.5-guardkit.1` + push | 3 | manual | 15 |
 | [TASK-FPA-008](TASK-FPA-008-write-fork-notes.md) | Write FORK-NOTES.md | 4 | direct | 30 |
 | [TASK-FPA-009](TASK-FPA-009-end-to-end-verification.md) | End-to-end verification (AC-FORK-08) | 4 | direct | 60 |
 

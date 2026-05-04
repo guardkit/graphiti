@@ -520,7 +520,7 @@ Add **AC-FORK-19**: "Pre-application baseline captured (step 0). Post-each-commi
 After this trace, **confidence in zero-regression landing is high** (estimate: 95%+).
 
 The remaining 5% covers:
-- Exotic operator configurations not currently in the appmilla deployment (Azure-fronted proxy with Responses API expectation — Diagram 13 §"Theoretical Azure-proxy regression").
+- Exotic operator configurations not currently in the guardkit deployment (Azure-fronted proxy with Responses API expectation — Diagram 13 §"Theoretical Azure-proxy regression").
 - Unobserved interaction between RediSearch versions (FalkorDB 1.1.x vs newer) and tokenizer behaviour for backticks.
 - The 600-line bug #9 reshape from `falkordb_workaround.py` to in-tree `search_utils.py` form (not yet drafted; subject to derivation-time bugs).
 

@@ -1,19 +1,19 @@
 ---
 id: TASK-FPA-002
-title: Push graphiti fork to GitHub (appmilla/graphiti, public) on branch appmilla-fixes-0.29
+title: Rename branch to guardkit-fixes-0.29 and push to origin (guardkit/graphiti)
 status: backlog
 created: 2026-05-04T00:00:00Z
 updated: 2026-05-04T00:00:00Z
 priority: high
 task_type: feature
-complexity: 2
-estimated_minutes: 30
+complexity: 1
+estimated_minutes: 10
 execution_location: promaxgb10-41b1
-tags: [graphiti, fork, github, infra]
+tags: [graphiti, fork, github]
 parent_review: TASK-FORK-PATCH
 feature_id: FEAT-FPA-2026-05
 wave: 1
-implementation_mode: manual
+implementation_mode: direct
 dependencies: []
 workspace_name: fork-patch-application-wave1-2
 test_results:
@@ -22,43 +22,43 @@ test_results:
   last_run: null
 ---
 
-# Push graphiti fork to GitHub
+# Rename branch and push to origin
 
-**WHY**: Decisions 2 and 3 in TASK-FORK-PATCH are locked to **public fork on the `appmilla` org** (or personal account if the org doesn't exist). Decision 4 is locked to **branch + tag** (active dev on `appmilla-fixes-0.29` branch; cut tags at shipping moments). This task creates the remote and pushes the current `work/falkordb-fixes` content as `appmilla-fixes-0.29`.
+**WHY**: The fork already exists at `https://github.com/guardkit/graphiti` (origin), forked from upstream `getzep/graphiti`. The current local branch `work/falkordb-fixes` carries two unpushed commits (`db0d0bd` lock-decisions + `4ef2534` subtask structure). This task renames the branch to match the existing `guardkit-*` naming convention (peer of `guardkit-tooling` already on origin) and pushes it.
 
-**WHAT**: Manual GH/git operations to create the remote repo, rename the local branch, set up tracking, and push.
+**WHAT**: Rename `work/falkordb-fixes` → `guardkit-fixes-0.29` locally and on origin; push with upstream tracking.
+
+## Pre-flight check
+
+```bash
+cd ~/Projects/appmilla_github/graphiti
+git remote -v                                       # expect: origin → https://github.com/guardkit/graphiti.git
+git branch -avv                                     # expect: * work/falkordb-fixes [no upstream tracking]
+git log --oneline -3                                # expect: 4ef2534, db0d0bd, d0913fe (or later)
+git ls-remote --heads origin | grep guardkit        # expect: guardkit-tooling already exists
+```
 
 ## Steps
 
 ```bash
-# 1. Confirm whether `appmilla` org exists
-gh repo view appmilla/graphiti 2>&1 || echo "Org or repo doesn't exist yet"
+# 1. Rename local branch
+git branch -m work/falkordb-fixes guardkit-fixes-0.29
 
-# 2. If org exists: create the fork repo under appmilla
-#    If org doesn't exist: substitute personal account (rwoollcott or similar)
-gh repo create appmilla/graphiti --public \
-  --description "appmilla fork of getzep/graphiti with FalkorDB/RediSearch and MCP fixes (TASK-FORK-PATCH)" \
-  --homepage "https://github.com/getzep/graphiti"
+# 2. Push with upstream tracking
+git push -u origin guardkit-fixes-0.29
 
-# 3. Add the new remote (preserve `origin` as the upstream getzep/graphiti)
-cd ~/Projects/appmilla_github/graphiti
-git remote -v   # should show origin → getzep/graphiti
-git remote add appmilla git@github.com:appmilla/graphiti.git
-
-# 4. Rename local branch to the fork's main dev branch name
-git branch -m work/falkordb-fixes appmilla-fixes-0.29
-
-# 5. Push branch with upstream tracking
-git push -u appmilla appmilla-fixes-0.29
+# 3. Verify
+git branch -avv | grep guardkit-fixes-0.29
+gh api repos/guardkit/graphiti/branches/guardkit-fixes-0.29 --jq '.commit.sha'
+# Expect: SHA of local HEAD (currently 4ef2534 or later if guardkit-rename commit landed)
 ```
 
 ## Acceptance Criteria
 
-- [ ] `gh repo view appmilla/graphiti` returns repo metadata (or, if `appmilla` org doesn't exist, equivalent under the substituted personal account — capture the chosen URL).
-- [ ] Remote `appmilla` is added in the local clone alongside `origin` (which still points at `getzep/graphiti`).
-- [ ] Branch `appmilla-fixes-0.29` is pushed with upstream tracking on the `appmilla` remote.
-- [ ] The pushed tip equals the current local head `db0d0bd` (the lock-decisions + patches-004/005 commit).
-- [ ] Repo description on GitHub includes a link to the parent task or a one-line summary of the fork's purpose.
+- [ ] Local branch is named `guardkit-fixes-0.29` (no longer `work/falkordb-fixes`).
+- [ ] Branch pushed to `origin` with upstream tracking (`git branch -avv` shows `[origin/guardkit-fixes-0.29]`).
+- [ ] `gh api repos/guardkit/graphiti/branches/guardkit-fixes-0.29` returns 200 with `commit.sha` matching local HEAD.
+- [ ] Existing `guardkit-tooling` branch on origin is **not** touched.
 
 ## Cross-references
 
@@ -66,6 +66,6 @@ git push -u appmilla appmilla-fixes-0.29
 
 ## Notes
 
-- Visibility is public per Decision 2 (DDD South West talk + simpler `pip install git+https://...`).
-- Branch protection rules (require PR for merges) are out of scope for this task — file as a follow-up if desired.
-- The local clone keeps `origin` pointing at `getzep/graphiti` to make periodic upstream merges straightforward.
+- The fork was created at `guardkit/graphiti` before this task started, so steps to "create the fork repo" are not needed.
+- Branch convention chosen to match the existing `guardkit-tooling` branch already on origin (per `git ls-remote --heads origin`).
+- This task is parallel-safe with TASK-FPA-001 (baseline capture); they touch different things.

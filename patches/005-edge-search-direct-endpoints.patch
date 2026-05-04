@@ -4,7 +4,7 @@
      if fuzzy_query == '':
          return []
 
-+    # appmilla fork (TASK-FORK-PATCH bug #9): replace the O(n×m) re-MATCH
++    # guardkit fork (TASK-FORK-PATCH bug #9): replace the O(n×m) re-MATCH
 +    # on rel.uuid with O(n) startNode/endNode endpoint access. The
 +    # relationship `rel` came from the RELATES_TO fulltext index so it is
 +    # RELATES_TO by construction; no type filter needed. Result set is
@@ -21,7 +21,7 @@
                  """
              )
          else:
-+            # appmilla fork (TASK-FORK-PATCH bug #9): replace the O(n×m)
++            # guardkit fork (TASK-FORK-PATCH bug #9): replace the O(n×m)
 +            # re-MATCH on rel.uuid with O(n) startNode/endNode access. The
 +            # path traversal allows MENTIONS edges (Episode→Entity), so we
 +            # filter to RELATES_TO before binding endpoints. Original used

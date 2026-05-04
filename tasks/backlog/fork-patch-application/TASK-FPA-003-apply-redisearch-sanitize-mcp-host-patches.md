@@ -26,7 +26,7 @@ test_results:
 
 **WHY**: First of four patch-application commits. Bundles three orthogonal fixes that all act at boundary B3 (driver↔FalkorDB) or B5 (MCP transport). Per the addendum execution-flow trace, all three are independently safe to land and have no inter-dependencies.
 
-**WHAT**: Apply patches 001/002/003 as a single commit on the `appmilla-fixes-0.29` branch, then re-run the AC-FORK-19 baseline diff.
+**WHAT**: Apply patches 001/002/003 as a single commit on the `guardkit-fixes-0.29` branch, then re-run the AC-FORK-19 baseline diff.
 
 ## Bugs covered
 
@@ -41,7 +41,7 @@ cd ~/Projects/appmilla_github/graphiti
 
 # 1. Verify clean tree on the fix branch
 git status                                                  # expect: clean
-git rev-parse --abbrev-ref HEAD                            # expect: appmilla-fixes-0.29
+git rev-parse --abbrev-ref HEAD                            # expect: guardkit-fixes-0.29
 
 # 2. Pre-apply check
 git apply --check patches/001-drop-fulltext-group-filter.patch \
@@ -83,7 +83,7 @@ diff /tmp/baseline-mcp.txt /tmp/post-${SHA}-mcp.txt || echo "DIFF FOUND — inve
 ## Acceptance Criteria
 
 - [ ] All three patches apply cleanly (`git apply --check` passes; `git apply` returns 0).
-- [ ] Single commit landed on `appmilla-fixes-0.29` with the message above (or equivalent).
+- [ ] Single commit landed on `guardkit-fixes-0.29` with the message above (or equivalent).
 - [ ] Baseline diff for `falkordb` and `mcp` test suites shows **no new failures**. New passes are acceptable.
 - [ ] If any new failure appears: revert this commit, file a blocker subtask, and pause Wave 2.
 

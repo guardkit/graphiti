@@ -1,10 +1,12 @@
 ---
 id: TASK-FPA-008
 title: Write FORK-NOTES.md at fork repo root documenting patches and rationale
-status: in_review
+status: completed
 created: 2026-05-04T00:00:00Z
-updated: 2026-05-04T15:30:00+01:00
-previous_state: in_progress
+updated: 2026-05-04T15:45:00+01:00
+completed: 2026-05-04T15:45:00+01:00
+previous_state: in_review
+completed_location: tasks/completed/fork-patch-application/
 priority: medium
 task_type: docs
 complexity: 2

@@ -1,9 +1,9 @@
 ---
 id: TASK-FPA-002
 title: Rename branch to guardkit-fixes-0.29 and push to origin (guardkit/graphiti)
-status: backlog
+status: in_review
 created: 2026-05-04T00:00:00Z
-updated: 2026-05-04T00:00:00Z
+updated: 2026-05-04T16:00:00Z
 priority: high
 task_type: feature
 complexity: 1
@@ -17,9 +17,10 @@ implementation_mode: direct
 dependencies: []
 workspace_name: fork-patch-application-wave1-2
 test_results:
-  status: pending
-  coverage: null
-  last_run: null
+  status: passed
+  coverage: n/a
+  last_run: 2026-05-04T16:00:00Z
+  notes: AC verified by gh api + git ls-remote; see Outcome section
 ---
 
 # Rename branch and push to origin
@@ -55,10 +56,10 @@ gh api repos/guardkit/graphiti/branches/guardkit-fixes-0.29 --jq '.commit.sha'
 
 ## Acceptance Criteria
 
-- [ ] Local branch is named `guardkit-fixes-0.29` (no longer `work/falkordb-fixes`).
-- [ ] Branch pushed to `origin` with upstream tracking (`git branch -avv` shows `[origin/guardkit-fixes-0.29]`).
-- [ ] `gh api repos/guardkit/graphiti/branches/guardkit-fixes-0.29` returns 200 with `commit.sha` matching local HEAD.
-- [ ] Existing `guardkit-tooling` branch on origin is **not** touched.
+- [x] Local branch is named `guardkit-fixes-0.29` (no longer `work/falkordb-fixes`).
+- [x] Branch pushed to `origin` with upstream tracking (`git branch -avv` shows `[origin/guardkit-fixes-0.29]`).
+- [x] `gh api repos/guardkit/graphiti/branches/guardkit-fixes-0.29` returns 200 with `commit.sha` matching local HEAD.
+- [x] Existing `guardkit-tooling` branch on origin is **not** touched.
 
 ## Cross-references
 
@@ -69,3 +70,24 @@ gh api repos/guardkit/graphiti/branches/guardkit-fixes-0.29 --jq '.commit.sha'
 - The fork was created at `guardkit/graphiti` before this task started, so steps to "create the fork repo" are not needed.
 - Branch convention chosen to match the existing `guardkit-tooling` branch already on origin (per `git ls-remote --heads origin`).
 - This task is parallel-safe with TASK-FPA-001 (baseline capture); they touch different things.
+
+## Outcome (2026-05-04, task-work run)
+
+State found at start: rename + initial push had already happened in an earlier session, but local was 1 commit ahead of `origin/guardkit-fixes-0.29` (`2f91058 Complete TASK-FPA-001` unpushed), and stale `origin/work/falkordb-fixes` (pre-rename branch) was still on the remote.
+
+Actions taken:
+
+1. `git push origin guardkit-fixes-0.29` → fast-forward `0bcf01d..2f91058`.
+2. `git push origin --delete work/falkordb-fixes` → stale remote branch removed (the WHAT in the task spec said "rename ... locally and on origin" but the original Steps block didn't include this deletion; added here to fulfil intent).
+
+Verification (post-action):
+
+```text
+local HEAD            = 2f91058 (Complete TASK-FPA-001…)
+local tracking        = * guardkit-fixes-0.29 [origin/guardkit-fixes-0.29] (no ahead/behind)
+gh api …/guardkit-fixes-0.29 commit.sha = 2f910589e63f66365cd62e42b83665b011d4c449
+guardkit-tooling on origin = d0913fe (unchanged)
+work/falkordb-fixes on origin = absent (deleted)
+```
+
+All 4 acceptance criteria are now satisfied.

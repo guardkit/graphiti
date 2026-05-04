@@ -53,3 +53,35 @@ Run from the graphiti fork directory, not from study-tutor — the task file liv
 Consider --no-questions if you don't want the clarification phase prompting you on review scope (the task is already extensively scoped); the standard prompt would mostly be redundant.
 So my one-liner pick: /task-review TASK-FORK-PATCH --mode=decision --depth=standard --no-questions from the graphiti fork dir.
 
+
+
+
+
+
+
+
+
+
+
+
+
+On the Mac:
+
+
+rsync -avh --delete \
+  --exclude='.venv/' \
+  --exclude='__pycache__/' \
+  --exclude='*.pyc' \
+  --exclude='.pytest_cache/' \
+  --exclude='*.egg-info' \
+  --exclude='build/' \
+  --exclude='dist/' \
+  ~/Projects/appmilla_github/graphiti-original/ \
+  promaxgb10-41b1:~/Projects/appmilla_github/graphiti-original/
+(Trailing slashes matter — source/ → dest/ syncs contents of the dir. --delete makes GB10 mirror the Mac exactly so we don't get hybrid state.)
+
+Why rsync over scp diff:
+
+Captures untracked files too (if there are any beyond the YAMLs).
+Brings the .git/ so git status / git diff --cached / git stash list all work the same on the GB10 as on the Mac.
+Excludes .venv/ (would have wrong absolute paths anyway on the GB10).

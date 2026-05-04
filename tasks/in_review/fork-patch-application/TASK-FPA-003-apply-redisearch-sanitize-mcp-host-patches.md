@@ -1,9 +1,17 @@
 ---
 id: TASK-FPA-003
 title: Apply patches 001+002+003 (RediSearch drop-filter, sanitize backtick, MCP host binding) as commit 1
-status: backlog
+status: in_review
 created: 2026-05-04T00:00:00Z
-updated: 2026-05-04T00:00:00Z
+updated: 2026-05-04T10:58:00+01:00
+previous_state: in_progress
+patch_commit: 94a2e6d
+test_results:
+  status: passed
+  baseline_diff: no_new_failures
+  falkordb_summary: "5 failed, 24 passed, 1 skipped, 42 errors (identical to baseline)"
+  mcp_summary: "32 failed, 11 passed, 2 errors (identical to baseline)"
+  last_run: 2026-05-04T10:58:00+01:00
 priority: high
 task_type: feature
 complexity: 3
@@ -16,10 +24,6 @@ wave: 2
 implementation_mode: direct
 dependencies: [TASK-FPA-001, TASK-FPA-002]
 workspace_name: fork-patch-application-wave2-1
-test_results:
-  status: pending
-  coverage: null
-  last_run: null
 ---
 
 # Apply patches 001+002+003 (RediSearch + sanitize + MCP host)

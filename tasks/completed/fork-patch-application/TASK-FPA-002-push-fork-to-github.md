@@ -1,9 +1,11 @@
 ---
 id: TASK-FPA-002
 title: Rename branch to guardkit-fixes-0.29 and push to origin (guardkit/graphiti)
-status: in_review
+status: completed
 created: 2026-05-04T00:00:00Z
-updated: 2026-05-04T16:00:00Z
+updated: 2026-05-04T16:30:00Z
+completed: 2026-05-04T16:30:00Z
+completed_location: tasks/completed/fork-patch-application/
 priority: high
 task_type: feature
 complexity: 1

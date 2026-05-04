@@ -4,10 +4,14 @@
 
 FROM python:3.11-slim-bookworm
 
-# Install system dependencies
+# Install system dependencies. `git` is required because uv clones the
+# graphiti-core fork from the PEP 508 git+ URL pinned in
+# mcp_server/pyproject.toml at install time. (guardkit fork addition;
+# upstream installed graphiti-core from PyPI and didn't need git.)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv for Python package management
@@ -27,18 +31,24 @@ ENV UV_COMPILE_BYTECODE=1 \
 # Set up MCP server directory
 WORKDIR /app/mcp
 
-# Accept graphiti-core version as build argument
-ARG GRAPHITI_CORE_VERSION=0.28.1
+# Accept graphiti-core fork tag as build argument (informational; the actual
+# pin lives in mcp_server/pyproject.toml as a PEP 508 git+ URL).
+#
+# guardkit fork (TASK-FORK-PATCH): the upstream Dockerfile rewrote
+# pyproject.toml at build time to install graphiti-core from PyPI at a
+# hardcoded version, which silently dropped the fork's bug-fix patches
+# (RediSearch dash-as-NOT, factory auto-detect, decorator gating, edge
+# search performance). We instead leave pyproject's git+ pin alone and
+# let uv resolve from the fork tag — the patches reach the container.
+ARG GRAPHITI_FORK_TAG=v0.29.5-guardkit.2
 
 # Copy project files for dependency installation
 COPY pyproject.toml uv.lock ./
 
-# Remove the local path override for graphiti-core in Docker builds
-# Install with BOTH neo4j and falkordb extras for maximum flexibility
-# and regenerate lock file to match the PyPI version
-RUN sed -i '/\[tool\.uv\.sources\]/,/graphiti-core/d' pyproject.toml && \
-    sed -i "s/graphiti-core\[falkordb\][>=]\+[0-9]\+\.[0-9]\+\.[0-9]\+/graphiti-core[neo4j,falkordb]==${GRAPHITI_CORE_VERSION}/" pyproject.toml && \
-    echo "Regenerating lock file for PyPI graphiti-core..." && \
+# Regenerate lock against the git+ pin in pyproject.toml. The committed
+# lock may be stale relative to the active tag; uv lock produces a
+# deterministic resolve.
+RUN echo "Regenerating lock file from fork pin in pyproject.toml..." && \
     rm -f uv.lock && \
     uv lock
 
@@ -46,8 +56,9 @@ RUN sed -i '/\[tool\.uv\.sources\]/,/graphiti-core/d' pyproject.toml && \
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --no-group dev
 
-# Store graphiti-core version
-RUN echo "${GRAPHITI_CORE_VERSION}" > /app/mcp/.graphiti-core-version
+# Store graphiti-core fork tag (visible inside the container at
+# /app/mcp/.graphiti-core-version for runtime introspection)
+RUN echo "${GRAPHITI_FORK_TAG}" > /app/mcp/.graphiti-core-version
 
 # Copy MCP server application code
 COPY main.py ./
@@ -68,7 +79,7 @@ LABEL org.opencontainers.image.title="Graphiti MCP Server (Standalone)" \
       org.opencontainers.image.revision="${VCS_REF}" \
       org.opencontainers.image.vendor="Zep AI" \
       org.opencontainers.image.source="https://github.com/zep-ai/graphiti" \
-      graphiti.core.version="${GRAPHITI_CORE_VERSION}"
+      graphiti.core.version="${GRAPHITI_FORK_TAG}"
 
 # Expose MCP server port
 EXPOSE 8000

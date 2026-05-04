@@ -1,10 +1,12 @@
 ---
 id: TASK-FPA-003
 title: Apply patches 001+002+003 (RediSearch drop-filter, sanitize backtick, MCP host binding) as commit 1
-status: in_review
+status: completed
 created: 2026-05-04T00:00:00Z
-updated: 2026-05-04T10:58:00+01:00
-previous_state: in_progress
+updated: 2026-05-04T11:05:00+01:00
+completed: 2026-05-04T11:05:00+01:00
+previous_state: in_review
+completed_location: tasks/completed/fork-patch-application/
 patch_commit: 94a2e6d
 test_results:
   status: passed

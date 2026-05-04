@@ -83,6 +83,10 @@ _SEPARATOR_MAP = str.maketrans(
         '|': ' ',
         '/': ' ',
         '\\': ' ',
+        # guardkit fork (TASK-FORK-PATCH bug #10): backtick survives
+        # upstream's strip list; see matching change in
+        # falkordb_driver.py:sanitize for rationale.
+        '`': ' ',
     }
 )
 
@@ -99,12 +103,11 @@ def _build_falkor_fulltext_query(
     max_query_length: int = MAX_QUERY_LENGTH,
 ) -> str:
     """Build a fulltext query string for FalkorDB using RedisSearch syntax."""
-    if group_ids is None or len(group_ids) == 0:
-        group_filter = ''
-    else:
-        escaped_group_ids = [f'"{gid}"' for gid in group_ids]
-        group_values = '|'.join(escaped_group_ids)
-        group_filter = f'(@group_id:{group_values})'
+    # guardkit fork (TASK-FORK-PATCH bugs #5/#11): drop the `(@group_id:...)`
+    # prefix — group isolation comes from the multi-graph driver clone plus
+    # the Cypher WHERE clause, not from the fulltext filter. See the matching
+    # change in falkordb_driver.py:build_fulltext_query for full rationale.
+    group_filter = ''
 
     sanitized_query = _sanitize(query)
 
@@ -115,6 +118,11 @@ def _build_falkor_fulltext_query(
 
     if len(sanitized_query.split(' ')) + len(group_ids or '') >= max_query_length:
         return ''
+
+    # guardkit fork (TASK-FORK-PATCH bug #12): match-all wildcard for empty
+    # post-stopword queries, rather than emitting invalid `()` syntax.
+    if not sanitized_query:
+        return '*'
 
     full_query = group_filter + ' (' + sanitized_query + ')'
     return full_query

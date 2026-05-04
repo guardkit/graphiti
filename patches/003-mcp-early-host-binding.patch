@@ -1,0 +1,24 @@
+--- a/mcp_server/src/graphiti_mcp_server.py
++++ b/mcp_server/src/graphiti_mcp_server.py
+@@ -144,9 +144,21 @@
+ """
+ 
+ # MCP server instance
++#
++# guardkit fork (TASK-FORK-PATCH bug #13): read MCP_SERVER_HOST at module
++# load time so FastMCP's transport_security freezes against the right
++# allow-list. graphiti-mcp's initialize_server() later mutates
++# `mcp.settings.host` from config.server.host, but transport_security is
++# already frozen by then — so non-loopback hosts (e.g. 0.0.0.0 in docker
++# deployments reachable over a private network) need the host set BEFORE
++# FastMCP construction, otherwise every Tailscale-hostname request returns
++# `421 Invalid Host header`. Default preserves upstream behaviour.
++_initial_host = os.environ.get('MCP_SERVER_HOST', '127.0.0.1')
++
+ mcp = FastMCP(
+     'Graphiti Agent Memory',
+     instructions=GRAPHITI_MCP_INSTRUCTIONS,
++    host=_initial_host,
+ )
+ 
+ # Global services

@@ -17,6 +17,7 @@ except ImportError:
 # Kuzu support removed - FalkorDB is now the default
 from graphiti_core.embedder import EmbedderClient, OpenAIEmbedder
 from graphiti_core.llm_client import LLMClient, OpenAIClient
+from graphiti_core.llm_client.openai_generic_client import OpenAIGenericClient
 from graphiti_core.llm_client.config import LLMConfig as GraphitiLLMConfig
 
 # Try to import additional providers if available
@@ -118,14 +119,27 @@ class LLMClientFactory:
 
                 # Use the same model for both main and small model slots
                 small_model = config.model
+                base_url = config.providers.openai.api_url
 
                 llm_config = CoreLLMConfig(
                     api_key=api_key,
                     model=config.model,
                     small_model=small_model,
+                    base_url=base_url,
                     temperature=config.temperature,
                     max_tokens=config.max_tokens,
                 )
+
+                # Use OpenAIGenericClient for non-OpenAI endpoints (Ollama, vLLM, etc.)
+                # OpenAIClient uses the Responses API which local servers don't support
+                is_openai_endpoint = base_url is None or 'api.openai.com' in base_url
+                if not is_openai_endpoint:
+                    logger.info(
+                        f'Using OpenAIGenericClient for non-OpenAI endpoint: {base_url}'
+                    )
+                    return OpenAIGenericClient(
+                        config=llm_config, max_tokens=config.max_tokens
+                    )
 
                 # Check if this is a reasoning model (o1, o3, gpt-5 family)
                 reasoning_prefixes = ('o1', 'o3', 'gpt-5')

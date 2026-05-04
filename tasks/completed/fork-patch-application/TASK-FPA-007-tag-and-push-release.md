@@ -1,9 +1,12 @@
 ---
 id: TASK-FPA-007
 title: Tag v0.29.5-guardkit.1 and push tag to fork remote
-status: backlog
+status: completed
 created: 2026-05-04T00:00:00Z
-updated: 2026-05-04T00:00:00Z
+updated: 2026-05-04T14:00:00+01:00
+completed: 2026-05-04T14:00:00+01:00
+previous_state: backlog
+completed_location: tasks/completed/fork-patch-application/
 priority: high
 task_type: feature
 complexity: 1
@@ -16,10 +19,14 @@ wave: 3
 implementation_mode: manual
 dependencies: [TASK-FPA-006]
 workspace_name: fork-patch-application-wave3-1
-test_results:
-  status: pending
-  coverage: null
-  last_run: null
+tag_name: v0.29.5-guardkit.1
+tag_object_sha: bc48a6e578616cce29a0bdaab0cb25cdad28b0a8
+tag_target_commit: 8a8174713f5958320515b80fea8ebdcbaf36b3cb
+verification:
+  status: passed
+  api_check: "gh api repos/guardkit/graphiti/git/refs/tags/v0.29.5-guardkit.1 -> 200, type=tag, sha=bc48a6e..."
+  pip_install_check: deferred_to_TASK-FPA-009
+  last_run: 2026-05-04T14:00:00+01:00
 ---
 
 # Tag v0.29.5-guardkit.1 and push tag

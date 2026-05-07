@@ -379,6 +379,11 @@ class FalkorDriver(GraphDriver):
                 '|': ' ',
                 '/': ' ',
                 '\\': ' ',
+                # guardkit fork (TASK-FORK-PATCH bug #10): backtick survives
+                # upstream's strip list; markdown-style `path/to/file.md`
+                # references in episode bodies otherwise leak `` ` `` into
+                # entity names and break RediSearch syntax at index time.
+                '`': ' ',
             }
         )
         sanitized = query.translate(separator_map)
@@ -400,14 +405,15 @@ class FalkorDriver(GraphDriver):
         """
         validate_group_ids(group_ids)
 
-        if group_ids is None or len(group_ids) == 0:
-            group_filter = ''
-        else:
-            # Escape group_ids with quotes to prevent RediSearch syntax errors
-            # with reserved words like "main" or special characters like hyphens
-            escaped_group_ids = [f'"{gid}"' for gid in group_ids]
-            group_values = '|'.join(escaped_group_ids)
-            group_filter = f'(@group_id:{group_values})'
+        # guardkit fork (TASK-FORK-PATCH bugs #5/#11): the upstream
+        # `(@group_id:"...")` fulltext filter is unreliable on FalkorDB.
+        # RediSearch tokenises group_ids at index time (so underscores split
+        # tokens) and parses dashes as NOT operators inside the double-quote
+        # wrap. Group isolation is already enforced by (a) the multi-graph
+        # driver clone (one named graph per group) and (b) the Cypher
+        # `WHERE e.group_id IN $group_ids` clause that runs after the
+        # fulltext lookup, so we drop the prefix entirely.
+        group_filter = ''
 
         sanitized_query = self.sanitize(query)
 
@@ -419,6 +425,12 @@ class FalkorDriver(GraphDriver):
         # If the query is too long return no query
         if len(sanitized_query.split(' ')) + len(group_ids or '') >= max_query_length:
             return ''
+
+        # guardkit fork (TASK-FORK-PATCH bug #12): if the query is empty after
+        # stopword removal, return RediSearch's match-all wildcard rather than
+        # producing the invalid `()` syntax that crashes the index lookup.
+        if not sanitized_query:
+            return '*'
 
         full_query = group_filter + ' (' + sanitized_query + ')'
 

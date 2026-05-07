@@ -18,6 +18,7 @@ except ImportError:
 from graphiti_core.embedder import EmbedderClient, OpenAIEmbedder
 from graphiti_core.llm_client import LLMClient, OpenAIClient
 from graphiti_core.llm_client.config import LLMConfig as GraphitiLLMConfig
+from graphiti_core.llm_client.openai_generic_client import OpenAIGenericClient
 
 # Try to import additional providers if available
 try:
@@ -112,6 +113,7 @@ class LLMClientFactory:
                     raise ValueError('OpenAI provider configuration not found')
 
                 api_key = config.providers.openai.api_key
+                api_url = config.providers.openai.api_url
                 _validate_api_key('OpenAI', api_key, logger)
 
                 from graphiti_core.llm_client.config import LLMConfig as CoreLLMConfig
@@ -119,15 +121,48 @@ class LLMClientFactory:
                 # Use the same model for both main and small model slots
                 small_model = config.model
 
+                # guardkit fork (TASK-INF-5054): pass base_url to LLMConfig.
+                # Without this, OpenAIClient falls back to the openai SDK default
+                # (https://api.openai.com/v1) and silently ignores the configured
+                # api_url. The embedder factory at OpenAIEmbedderFactory.create
+                # has always done this — the LLM factory was the asymmetric one.
                 llm_config = CoreLLMConfig(
                     api_key=api_key,
+                    base_url=api_url,
                     model=config.model,
                     small_model=small_model,
                     temperature=config.temperature,
                     max_tokens=config.max_tokens,
                 )
 
-                # Check if this is a reasoning model (o1, o3, gpt-5 family)
+                # guardkit fork (TASK-INF-5054): pick the right client class for
+                # the endpoint. OpenAIClient routes structured-output calls to
+                # client.responses.parse (the OpenAI Responses API at
+                # /v1/responses), which exists only on OpenAI cloud. Local
+                # OpenAI-compatible servers (llama.cpp, llama-swap, vLLM,
+                # ollama, openrouter, anthropic-via-openai-compat, etc.) only
+                # implement /v1/chat/completions. OpenAIGenericClient uses the
+                # chat.completions endpoint with response_format json_schema,
+                # which works against any modern OpenAI-compatible server.
+                #
+                # Heuristic: if api_url targets OpenAI cloud, use OpenAIClient
+                # (Responses API supported, reasoning model params honoured).
+                # Otherwise use OpenAIGenericClient.
+                is_openai_cloud = (
+                    not api_url
+                    or api_url.startswith('https://api.openai.com')
+                )
+
+                if not is_openai_cloud:
+                    logger.info(
+                        f'OpenAI-compatible endpoint detected (api_url={api_url}); '
+                        f'using OpenAIGenericClient (chat.completions + json_schema). '
+                        f'OpenAIClient (Responses API) is reserved for openai.com.'
+                    )
+                    return OpenAIGenericClient(config=llm_config)
+
+                # OpenAI cloud path — Responses API is available; honour
+                # reasoning/verbosity for the gpt-5 / o1 / o3 family.
                 reasoning_prefixes = ('o1', 'o3', 'gpt-5')
                 is_reasoning_model = config.model.startswith(reasoning_prefixes)
 

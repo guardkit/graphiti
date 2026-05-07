@@ -8,6 +8,7 @@ import asyncio
 import logging
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -645,16 +646,26 @@ async def get_episodes(
             else []
         )
 
-        # Get episodes from the driver directly
-        from graphiti_core.nodes import EpisodicNode
-
         if effective_group_ids:
-            episodes = await EpisodicNode.get_by_group_ids(
-                client.driver, effective_group_ids, limit=max_episodes
+            # Route through Graphiti.retrieve_episodes so the
+            # @handle_multiple_group_ids decorator handles FalkorDB's
+            # per-group named-graph layout. Calling EpisodicNode.get_by_group_ids
+            # directly bypasses the decorator and queries the wrong graph,
+            # which returns [] on FalkorDB even when episodes exist.
+            episodes = await client.retrieve_episodes(
+                reference_time=datetime.now(timezone.utc),
+                last_n=max_episodes,
+                group_ids=effective_group_ids,
             )
         else:
-            # If no group IDs, we need to use a different approach
-            # For now, return empty list when no group IDs specified
+            # No group IDs specified and no default configured — return empty.
+            # Routing group_ids=None through retrieve_episodes would query the
+            # shared default graph on FalkorDB (always empty under per-group
+            # named-graph layout), which is the cross-backend asymmetry being
+            # fixed here.
+            logger.warning(
+                'get_episodes called with no group_ids and no configured default — returning empty'
+            )
             episodes = []
 
         if not episodes:

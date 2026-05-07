@@ -24,35 +24,40 @@ ENV UV_COMPILE_BYTECODE=1 \
     MCP_SERVER_HOST="0.0.0.0" \
     PYTHONUNBUFFERED=1
 
-# Set up MCP server directory
+# guardkit fork: build context is the FORK ROOT (not mcp_server/) so the
+# image can install graphiti-core from the local source tree and ship the
+# fork's bug fixes in graphiti_core/. Paths below are relative to the
+# fork root. WORKDIR stays /app/mcp because graphiti-mcp.sh bind-mounts
+# config and bootstrap to /app/mcp/{config,bootstrap.py}.
+
+# Lay out the fork root one level above /app/mcp so [tool.uv.sources]
+# (graphiti-core = { path = "../" }) in mcp_server/pyproject.toml
+# resolves to /app/, which contains the graphiti-core package.
+WORKDIR /app
+
+# Copy graphiti-core package files needed by the editable install
+COPY pyproject.toml ./
+COPY README.md ./
+COPY graphiti_core/ ./graphiti_core/
+
+# Copy MCP server lockfile + manifest into /app/mcp
 WORKDIR /app/mcp
+COPY mcp_server/pyproject.toml mcp_server/uv.lock ./
 
-# Accept graphiti-core version as build argument
-ARG GRAPHITI_CORE_VERSION=0.28.1
-
-# Copy project files for dependency installation
-COPY pyproject.toml uv.lock ./
-
-# Remove the local path override for graphiti-core in Docker builds
-# Install with BOTH neo4j and falkordb extras for maximum flexibility
-# and regenerate lock file to match the PyPI version
-RUN sed -i '/\[tool\.uv\.sources\]/,/graphiti-core/d' pyproject.toml && \
-    sed -i "s/graphiti-core\[falkordb\][>=]\+[0-9]\+\.[0-9]\+\.[0-9]\+/graphiti-core[neo4j,falkordb]==${GRAPHITI_CORE_VERSION}/" pyproject.toml && \
-    echo "Regenerating lock file for PyPI graphiti-core..." && \
-    rm -f uv.lock && \
-    uv lock
-
-# Install Python dependencies (exclude dev dependency group)
+# Install Python dependencies (exclude dev dependency group). uv resolves
+# graphiti-core from the editable source at ../ rather than PyPI.
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --no-group dev
 
-# Store graphiti-core version
-RUN echo "${GRAPHITI_CORE_VERSION}" > /app/mcp/.graphiti-core-version
+# Store graphiti-core version (read from the local source pyproject)
+RUN python -c "import tomllib, pathlib; \
+    print(tomllib.loads(pathlib.Path('/app/pyproject.toml').read_text())['project']['version'])" \
+    > /app/mcp/.graphiti-core-version
 
 # Copy MCP server application code
-COPY main.py ./
-COPY src/ ./src/
-COPY config/ ./config/
+COPY mcp_server/main.py ./
+COPY mcp_server/src/ ./src/
+COPY mcp_server/config/ ./config/
 
 # Create log directory
 RUN mkdir -p /var/log/graphiti
@@ -67,8 +72,7 @@ LABEL org.opencontainers.image.title="Graphiti MCP Server (Standalone)" \
       org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.revision="${VCS_REF}" \
       org.opencontainers.image.vendor="Zep AI" \
-      org.opencontainers.image.source="https://github.com/zep-ai/graphiti" \
-      graphiti.core.version="${GRAPHITI_CORE_VERSION}"
+      org.opencontainers.image.source="https://github.com/guardkit/graphiti"
 
 # Expose MCP server port
 EXPOSE 8000

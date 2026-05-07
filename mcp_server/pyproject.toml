@@ -59,6 +59,14 @@ quote-style = "single"
 indent-style = "space"
 docstring-code-format = true
 
+# guardkit fork: resolve graphiti-core from the local source tree at the
+# fork root rather than upstream PyPI. Without this, the fork's bug fixes
+# in graphiti_core/ (#5/#8/#9/#10/#11/#12) are orphaned — Docker builds
+# and local `uv sync` both pull the broken upstream wheel.
+# Upstream removed this block in commit e1e652e (#1186); we re-add it.
+[tool.uv.sources]
+graphiti-core = { path = "../", editable = true }
+
 [dependency-groups]
 dev = [
     "faker>=37.12.0",

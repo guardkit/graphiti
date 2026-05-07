@@ -1,9 +1,111 @@
 # Bug: MCP `get_episodes` tool returns empty results on FalkorDB
 
-**Status:** open
+**Status:** RESOLVED in `v0.29.5-guardkit.5` (2026-05-07)
 **Severity:** medium (affects retrieval; no data loss)
-**Tag affected:** `v0.29.5-guardkit.3` (and earlier guardkit tags)
-**Component:** `mcp_server/src/graphiti_mcp_server.py`
+**Tag affected:** `v0.29.5-guardkit.3` and `v0.29.5-guardkit.4` (and earlier)
+**Tag fixed in:** `v0.29.5-guardkit.5`
+**Component:** `mcp_server/src/graphiti_mcp_server.py` + `mcp_server/docker/Dockerfile.standalone` + `mcp_server/pyproject.toml`
+
+---
+
+## Resolution (2026-05-07)
+
+**The original "Suggested fix" below shipped in `v0.29.5-guardkit.4`
+(commit `83abbec`) and was correct as far as it went, but it did not
+resolve the symptom because of a separate packaging defect that
+orphaned every fork patch in `graphiti_core/` at runtime.** The full
+fix needed two layers, both required:
+
+### Layer 1 (v0.29.5-guardkit.4, MCP-side routing — commit `83abbec`)
+
+`mcp_server/src/graphiti_mcp_server.py` `get_episodes` routes through
+`Graphiti.retrieve_episodes` (decorated with
+`@handle_multiple_group_ids`) instead of calling
+`EpisodicNode.get_by_group_ids` directly with the shared driver. Exactly
+as proposed in the original "Suggested fix" section below.
+
+### Layer 2 (v0.29.5-guardkit.5, Dockerfile vendoring — commit `4ba8a4d`)
+
+The decorator fix (bug #8, commit `7a914ec`) that drops the
+`len(group_ids) > 1` gate had been in `graphiti_core/decorators.py`
+since `v0.29.5-guardkit.3` — but it never reached the running image.
+`mcp_server/docker/Dockerfile.standalone` was deliberately stripping
+`[tool.uv.sources]` from `mcp_server/pyproject.toml` and pinning
+`graphiti-core[neo4j,falkordb]==0.28.1` from PyPI, so every fork patch
+in `graphiti_core/` (#5/#8/#9/#10/#11/#12) was on disk but not in the
+runtime venv:
+
+```dockerfile
+# pre-fix
+RUN sed -i '/\[tool\.uv\.sources\]/,/graphiti-core/d' pyproject.toml && \
+    sed -i "s/graphiti-core\[falkordb\][>=]\+[0-9]\+\.[0-9]\+\.[0-9]\+/graphiti-core[neo4j,falkordb]==${GRAPHITI_CORE_VERSION}/" pyproject.toml && \
+    rm -f uv.lock && uv lock
+```
+
+Empirically confirmed on `promaxgb10-41b1` against the running
+`v0.29.5-guardkit.4` container (2026-05-07): the venv at
+`.venv/lib/python3.11/site-packages/graphiti_core/decorators.py` still
+had `len(group_ids) > 1` despite the source-tree fix being in place.
+
+**Why this orphaned the patches:** upstream removed
+`[tool.uv.sources] graphiti-core = { path = "../", editable = true }`
+in commit `e1e652e` (PR #1186, "Pin mcp_server to graphiti-core
+0.26.3"). The fork inherited that change without re-adding the
+override, so both Docker builds and local `uv sync` against
+`mcp_server/` resolved graphiti-core from PyPI.
+
+**The Dockerfile fix:** build context becomes the fork root (was
+`mcp_server/`), the image lays out `/app/{pyproject.toml,README.md,graphiti_core/}`
+one level above `/app/mcp/`, and `mcp_server/pyproject.toml` re-adds
+`[tool.uv.sources] graphiti-core = { path = "../", editable = true }`.
+`uv sync` now editable-installs graphiti-core from `/app/`. `WORKDIR`
+stays `/app/mcp` because consumers bind-mount to
+`/app/mcp/{config,bootstrap.py}`.
+
+### Verification (2026-05-07, on `promaxgb10-41b1`, FalkorDB at `whitestocks`)
+
+Pre-fix (any guardkit tag through `.4`):
+```
+single-group get_episodes(["command_workflows"]) → [] (FalkorDB has 169 episodes in that named graph)
+multi-group get_episodes(["command_workflows", "patterns"]) → 6 episodes
+```
+
+Post-fix (`v0.29.5-guardkit.5`):
+```
+single-group get_episodes(["command_workflows"])           → 3 episodes (PASS)
+single-group get_episodes(["patterns"])                    → 3 episodes (PASS)
+single-group get_episodes(["guardkit__project_decisions"]) → 3 episodes (PASS)
+single-group get_episodes(["guardkit__task_outcomes"])     → 3 episodes (PASS)
+multi-group regression check                                → 8 episodes (PASS)
+```
+
+### Lessons (logged to GuardKit memory)
+
+- **The fork's appearance of containing bug fixes was a false-green.**
+  Source-level audit looked clean; runtime behaviour was upstream-broken.
+  Verifying a fix by reading the patched file in `graphiti_core/` is
+  insufficient when the runtime image installs from PyPI.
+- **The fork is a fork *because* the patches in `graphiti_core/` are
+  needed at runtime.** Future Dockerfile changes in this fork must
+  never strip `[tool.uv.sources]`.
+
+### Companion fix
+
+`v0.29.5-guardkit.6` (commit `c8b5a65`, 2026-05-07) fixes a separate
+write-path issue (TASK-INF-5054) that prevented `add_memory` from
+completing extraction on local LLM endpoints. See
+[`llm-endpoint-misrouting-task-inf-5054.md`](./llm-endpoint-misrouting-task-inf-5054.md).
+
+### Refs
+
+- Tag annotation: `git show v0.29.5-guardkit.5`
+- Companion guardkit commit: `705b7000` on `github.com/guardkit/guardkit`
+- Runbook verification: GuardKit `docs/research/dgx-spark/RUNBOOK-v3-production-deployment.md` Phase 8.1
+
+---
+
+## Original analysis (preserved for posterity)
+
 
 ## Summary
 
